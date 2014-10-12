@@ -180,7 +180,7 @@ namespace TrainAssistant
                                 var name = Regex.Match(result, @"var\s+sessionInit\s*=\s*'(?<name>[^']+)';", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
                                 if (name.Success)
                                 {
-                                    result =hhelper.UnicodeToGBK(name.Groups["name"].Value) + "登录成功";
+                                    result = hhelper.UnicodeToGBK(name.Groups["name"].Value) + "登录成功";
                                 }
                                 else
                                 {
@@ -1111,11 +1111,12 @@ namespace TrainAssistant
             lblTicket.Content = tickets.FromStationName + "-->" + tickets.ToStationName + "(" + tickets.TrainName + ")";
             progressRingAnima.IsActive = true;
             List<Contacts> contacts = ReadContacts("Contact");
-            int row =contacts.Count;//(int)Math.Ceiling((double)contacts.Count / 3);
+            int row = contacts.Count;//(int)Math.Ceiling((double)contacts.Count / 3);
             while (row-- > 0)
             {
-                gContacts.RowDefinitions.Add(new RowDefinition() { 
-                    Height=new GridLength()
+                gContacts.RowDefinitions.Add(new RowDefinition()
+                {
+                    Height = new GridLength()
                 });
             }
             if (contacts.Count > 0)
@@ -1144,11 +1145,12 @@ namespace TrainAssistant
         //选择乘客
         async void chkContact_Click(object sender, RoutedEventArgs e)
         {
-            if (gridPassenger.Items.Count > 5)
-            {
-                MessageBox.Show("乘客数不能超过5个", "消息", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            //if (gridPassenger.Items.Count >= 5)
+            //{
+            //    MessageBox.Show("乘客数不能超过5个", "消息", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //    CheckBox chkItem = e.Source as CheckBox;
+            //    chkItem.IsChecked = false;
+            //}
             string val = "";
             CheckBox chk;
             foreach (var c in gContacts.Children)
@@ -1203,7 +1205,14 @@ namespace TrainAssistant
             SubmitOrder subOrderModel = null;
             if (val != "")
             {
-                var selPassenger = val.Split(',');//选中的乘客
+                var selPassenger = val.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);//选中的乘客
+                if (selPassenger.Count() > 5)
+                {
+                    MessageBox.Show("乘客数不能超过5个", "消息", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    CheckBox chkItem = e.Source as CheckBox;
+                    chkItem.IsChecked = false;
+                    return;
+                }
                 for (int j = 0; j < selPassenger.Count(); j++)
                 {
                     if (selPassenger[j] != "")
