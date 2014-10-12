@@ -180,7 +180,7 @@ namespace TrainAssistant
                                 var name = Regex.Match(result, @"var\s+sessionInit\s*=\s*'(?<name>[^']+)';", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
                                 if (name.Success)
                                 {
-                                    result = name.Groups["name"].Value + "登录成功";
+                                    result =hhelper.UnicodeToGBK(name.Groups["name"].Value) + "登录成功";
                                 }
                                 else
                                 {

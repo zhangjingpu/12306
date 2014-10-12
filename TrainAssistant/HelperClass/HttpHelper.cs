@@ -203,5 +203,22 @@ namespace JasonLong.Helper
             return reader.ReadToEnd();
         }
 
+        /// <summary>
+        /// Unicode转中文
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public string UnicodeToGBK(string str)
+        {
+            MatchCollection match = Regex.Matches(str,@"\\u([\\w{4}])");
+            string text=str.Replace(@"\u","");
+            char[] charStr = new char[match.Count];
+            for (int i = 0; i < charStr.Length; i++)
+            {
+                charStr[i] = (char)Convert.ToInt32(text.Substring(i*4,4),16);
+            }
+            return new string(charStr);
+        }
+
     }
 }
