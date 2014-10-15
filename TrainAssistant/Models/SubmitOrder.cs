@@ -17,6 +17,10 @@ namespace TrainAssistant.Models
         /// 席别
         /// </summary>
         public Dictionary<string,string> SeatType { get; set; }
+        /// <summary>
+        /// 选择的席别
+        /// </summary>
+        public string SelSeatType { get; set; }
 
         /// <summary>
         /// 乘客名
@@ -32,11 +36,19 @@ namespace TrainAssistant.Models
         /// 票种
         /// </summary>
         public Dictionary<string,string> TickType { get; set; }
+        /// <summary>
+        /// 选择的票种
+        /// </summary>
+        public string SelTickType { get; set; }
 
         /// <summary>
         /// 证件类型
         /// </summary>
         public Dictionary<string, string> IDType { get; set; }
+        /// <summary>
+        /// 选择的证件类型
+        /// </summary>
+        public string SelIDType { get; set; }
 
         /// <summary>
         /// 证件号码

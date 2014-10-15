@@ -112,6 +112,7 @@
                     <ColumnDefinition Width="110"/>
                 </Grid.ColumnDefinitions>
                 <Label Name="lblTicket" Grid.Row="0" VerticalContentAlignment="Center" Grid.ColumnSpan="2" HorizontalContentAlignment="Center" Foreground="#60B2E0" FontSize="17" FontWeight="Bold" />
+                <Label Grid.Row="0" Visibility="Hidden" Name="lblSecretStr"/>
                 <Button Width="25" Height="25" Name="btnClosePopup" ToolTip="关闭" Cursor="Hand" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,-30,-30,45" Click="btnClosePopup_Click" Grid.ColumnSpan="2">
                     <Button.Template>
                         <ControlTemplate>
@@ -132,29 +133,83 @@
                     <GroupBox Header="乘车人信息" Margin="0">
                         <DataGrid Name="gridPassenger" AutoGenerateColumns="False" Margin="7" CanUserAddRows="False">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="席别">
+                                <DataGridComboBoxColumn Header="席别">
+                                    <DataGridComboBoxColumn.EditingElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding Path=SeatType}"/>
+                                            <Setter Property="DisplayMemberPath" Value="Value"/>
+                                            <Setter Property="SelectedValuePath" Value="Key"/>
+                                            <Setter Property="SelectedValue" Value="{Binding Path=SelSeatType,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.EditingElementStyle>
+                                    <DataGridComboBoxColumn.ElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding Path=SeatType}"/>
+                                            <Setter Property="DisplayMemberPath" Value="Value"/>
+                                            <Setter Property="SelectedValuePath" Value="Key"/>
+                                            <Setter Property="SelectedValue" Value="{Binding Path=SelSeatType}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.ElementStyle>
+                                </DataGridComboBoxColumn>
+                                <!--<DataGridTemplateColumn Header="席别">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <ComboBox x:Name="cmbSeatType" ItemsSource="{Binding Path=SeatType}" DisplayMemberPath="Value" SelectedValuePath="Key" SelectedIndex="0"/>
+                                            <ComboBox ItemsSource="{Binding Path=SeatType}" DisplayMemberPath="Value" SelectedValuePath="Key" SelectedIndex="0" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                </DataGridTemplateColumn>-->
                                 <DataGridTextColumn Header="姓名" Binding="{Binding Path=PassengerName}" IsReadOnly="True"/>
                                 <DataGridTextColumn Header="手机号" Binding="{Binding Path=PassengerMobile}" IsReadOnly="True"/>
-                                <DataGridTemplateColumn Header="票种">
+                                <DataGridComboBoxColumn Header="票种">
+                                    <DataGridComboBoxColumn.EditingElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding Path=TickType}"/>
+                                            <Setter Property="DisplayMemberPath" Value="Key"/>
+                                            <Setter Property="SelectedValuePath" Value="Value"/>
+                                            <Setter Property="SelectedValue" Value="{Binding Path=SelTickType,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.EditingElementStyle>
+                                    <DataGridComboBoxColumn.ElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding Path=TickType}"/>
+                                            <Setter Property="DisplayMemberPath" Value="Key"/>
+                                            <Setter Property="SelectedValuePath" Value="Value"/>
+                                            <Setter Property="SelectedValue" Value="{Binding Path=SelTickType}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.ElementStyle>
+                                </DataGridComboBoxColumn>
+                                <!--<DataGridTemplateColumn Header="票种">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding Path=TickType}" DisplayMemberPath="Key" SelectedValuePath="Value" SelectedIndex="0"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="证件类型">
+                                </DataGridTemplateColumn>-->
+                                <DataGridComboBoxColumn Header="证件类型">
+                                    <DataGridComboBoxColumn.EditingElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding Path=IDType}"/>
+                                            <Setter Property="DisplayMemberPath" Value="Key"/>
+                                            <Setter Property="SelectedValuePath" Value="Value"/>
+                                            <Setter Property="SelectedValue" Value="{Binding Path=SelIDType,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.EditingElementStyle>
+                                    <DataGridComboBoxColumn.ElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding Path=IDType}"/>
+                                            <Setter Property="DisplayMemberPath" Value="Key"/>
+                                            <Setter Property="SelectedValuePath" Value="Value"/>
+                                            <Setter Property="SelectedValue" Value="{Binding Path=SelIDType}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.ElementStyle>
+                                </DataGridComboBoxColumn>
+                                <!--<DataGridTemplateColumn Header="证件类型">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding Path=IDType}" DisplayMemberPath="Key" SelectedValuePath="Value" SelectedIndex="0"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                </DataGridTemplateColumn>-->
                                 <DataGridTextColumn Header="证件号码" Binding="{Binding Path=PassengerId}" IsReadOnly="True" Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>

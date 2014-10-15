@@ -25,6 +25,7 @@ using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using TrainAssistant.Models;
 using System.Web;
+using System.Windows.Controls.Primitives;
 
 namespace TrainAssistant
 {
@@ -88,7 +89,7 @@ namespace TrainAssistant
         }
 
         /// <summary>
-        /// 判断验证码是否输入正确
+        /// 判断登录验证码是否输入正确
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
@@ -361,7 +362,8 @@ namespace TrainAssistant
                                     yznum = t["queryLeftNewDTO"]["yz_num"],//硬座
                                     zenum = t["queryLeftNewDTO"]["ze_num"],//二等座
                                     zynum = t["queryLeftNewDTO"]["zy_num"],//一等座
-                                    swznum = t["queryLeftNewDTO"]["swz_num"]//商务座
+                                    swznum = t["queryLeftNewDTO"]["swz_num"],//商务座
+                                    secretStr = t["secretStr"]//预订凭证
                                 }).ToList();
 
                     if (list.Count > 0)
@@ -423,7 +425,8 @@ namespace TrainAssistant
                                 YZNum = t.yznum.ToString(),
                                 ZENum = t.zenum.ToString(),
                                 ZYNum = t.zynum.ToString(),
-                                SWZNum = t.swznum.ToString()
+                                SWZNum = t.swznum.ToString(),
+                                SecretStr=t.secretStr.ToString()
                             });
                         }
                     }
@@ -665,11 +668,6 @@ namespace TrainAssistant
             });
         }
 
-        //private Task SubmitOrder()
-        //{
-
-        //}
-
         /// <summary>
         /// 刷新验证码
         /// </summary>
@@ -859,7 +857,7 @@ namespace TrainAssistant
             if (loginName.IndexOf("登录成功") > 0)
             {
                 IsShowLoginPopup(false);
-                lblLoginName.Text = loginName.Substring(0, loginName.IndexOf("登录成功"));
+                lblLoginName.Text = "欢迎，" + loginName.Substring(0, loginName.IndexOf("登录成功"));
                 lblStatusMsg.Content = loginName.Substring(loginName.IndexOf("登录成功"));
             }
             else
@@ -962,11 +960,11 @@ namespace TrainAssistant
         {
             if (chkAll.IsChecked == true)
             {
-                chkEMU.IsChecked = chkK.IsChecked = chkZ.IsChecked = chkT.IsChecked = chkOther.IsChecked = true;
+                chkEMU.IsChecked = chkK.IsChecked = chkZ.IsChecked = chkT.IsChecked = chkOther.IsChecked = chkHSR.IsChecked = true;
             }
             else
             {
-                chkEMU.IsChecked = chkK.IsChecked = chkZ.IsChecked = chkT.IsChecked = chkOther.IsChecked = false;
+                chkEMU.IsChecked = chkK.IsChecked = chkZ.IsChecked = chkT.IsChecked = chkOther.IsChecked = chkHSR.IsChecked = false;
             }
         }
 
@@ -1097,8 +1095,6 @@ namespace TrainAssistant
         private async void Reservate_Click(object sender, RoutedEventArgs e)
         {
             Tickets tickets = gridTrainList.SelectedItem as Tickets;
-            gridOpacity.Visibility = Visibility.Visible;
-            orderPopup.Visibility = Visibility.Visible;
             seatTypes = "";
             for (int o = 4; o < gridTrainList.Columns.Count - 1; o++)
             {
@@ -1108,8 +1104,18 @@ namespace TrainAssistant
                     seatTypes += gridTrainList.Columns[o].Header.ToString() + "@";
                 }
             }
-            lblTicket.Content = tickets.FromStationName + "-->" + tickets.ToStationName + "(" + tickets.TrainName + ")";
+            lblTicket.Content = tickets.FromStationName + "→" + tickets.ToStationName + "(" + tickets.TrainName + ")";
+            lblTicket.Tag = tickets.TrainNo + "," + tickets.YPInfo + "," + tickets.TrainName + "," + tickets.FromStationCode + "," + tickets.ToStationCode;
+            string purposeCode = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
+            Dictionary<bool, string> dicSubmitOrderReq = await SubmitOrderRequest(tickets, purposeCode);
+            if (!dicSubmitOrderReq.Keys.First())
+            {
+                MessageBox.Show(dicSubmitOrderReq.Values.First(), "提示", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             progressRingAnima.IsActive = true;
+            gridOpacity.Visibility = Visibility.Visible;
+            orderPopup.Visibility = Visibility.Visible;
             List<Contacts> contacts = ReadContacts("Contact");
             int row = contacts.Count;//(int)Math.Ceiling((double)contacts.Count / 3);
             while (row-- > 0)
@@ -1137,6 +1143,7 @@ namespace TrainAssistant
                     chkContact.SetValue(Grid.ColumnProperty, 0);
                 }
             }
+            lblSecretStr.Content = await GetSubmitOrderToken();
             imgOrderCode.Source = await GetSubmitOrderCode();
             txtOrderCode.Text = order_code;
             progressRingAnima.IsActive = false;
@@ -1145,12 +1152,6 @@ namespace TrainAssistant
         //选择乘客
         async void chkContact_Click(object sender, RoutedEventArgs e)
         {
-            //if (gridPassenger.Items.Count >= 5)
-            //{
-            //    MessageBox.Show("乘客数不能超过5个", "消息", MessageBoxButton.OK, MessageBoxImage.Warning);
-            //    CheckBox chkItem = e.Source as CheckBox;
-            //    chkItem.IsChecked = false;
-            //}
             string val = "";
             CheckBox chk;
             foreach (var c in gContacts.Children)
@@ -1202,7 +1203,6 @@ namespace TrainAssistant
             idType.Add("护照", "B");
 
             List<SubmitOrder> subOrder = new List<SubmitOrder>();
-            SubmitOrder subOrderModel = null;
             if (val != "")
             {
                 var selPassenger = val.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);//选中的乘客
@@ -1218,16 +1218,18 @@ namespace TrainAssistant
                     if (selPassenger[j] != "")
                     {
                         var item = selPassenger[j].Split('#');
-                        subOrderModel = new SubmitOrder();
+                        SubmitOrder subOrderModel = new SubmitOrder();
                         subOrderModel.SeatType = seat_Type.ToDictionary(m => m.Key, m => m.Value);
+                        subOrderModel.SelSeatType = subOrderModel.SeatType.Keys.Last();
                         subOrderModel.TickType = (from t in tickType
                                                   where t.Key.Contains(item[0])
                                                   select t).ToDictionary(m => m.Key, m => m.Value);
-
+                        subOrderModel.SelTickType = subOrderModel.TickType.Values.First();
                         subOrderModel.PassengerName = item[1];
                         subOrderModel.IDType = (from d in idType
                                                 where d.Key.Contains(item[2])
                                                 select d).ToDictionary(m => m.Key, m => m.Value);
+                        subOrderModel.SelIDType = subOrderModel.IDType.Values.First();
                         subOrderModel.PassengerId = item[3];
                         subOrderModel.PassengerMobile = item[4];
                         subOrder.Add(subOrderModel);
@@ -1274,7 +1276,7 @@ namespace TrainAssistant
         }
 
         //提交
-        private void btnSubmit_Click(object sender, RoutedEventArgs e)
+        private async void btnSubmit_Click(object sender, RoutedEventArgs e)
         {
             if (gridPassenger.Items.Count < 1)
             {
@@ -1286,13 +1288,262 @@ namespace TrainAssistant
                 lblStatusMsg.Content = "验证码不能为空";
                 return;
             }
-            if (txtOrderCode.Text.Trim().Length < 5 || txtOrderCode.Text.Trim().Length > 4)
+            if (txtOrderCode.Text.Trim().Length < 4 || txtOrderCode.Text.Trim().Length > 4)
             {
-                lblStatusMsg.Content = "";
+                lblStatusMsg.Content = "验证码长度为4位";
                 return;
             }
-
+            var lstPassengers = gridPassenger.ItemsSource as List<SubmitOrder>;
+            progressRingAnima.IsActive = true;
+            string orderResult = await SubmitOrder(lstPassengers, txtOrderCode.Text, lblSecretStr.Content.ToString());
+            lblStatusMsg.Content = orderResult;
+            MessageBox.Show(orderResult, "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            progressRingAnima.IsActive = false;
         }
 
+        /// <summary>
+        /// 预订
+        /// </summary>
+        /// <param name="ticket"></param>
+        /// <param name="purposeCode"></param>
+        /// <returns></returns>
+        public Task<Dictionary<bool, string>> SubmitOrderRequest(Tickets ticket, string purposeCode)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                string orderRequestUrl = ConfigurationManager.AppSettings["SubmitOrderRequestUrl"].ToString();
+                string trainDate = ticket.StartTrainDate.Substring(0, 4) + "-" + ticket.StartTrainDate.Substring(4, 2) + "-" + ticket.StartTrainDate.Substring(6, 2);
+                Dictionary<string, string> orderRequesParams = new Dictionary<string, string>()
+                {
+                    {"secretStr",ticket.SecretStr},
+                    {"train_date",trainDate},
+                    {"back_train_date",DateTime.Now.ToString("yyyy-MM-dd")},
+                    {"tour_flag","dc"},
+                    {"purpose_codes",purposeCode},
+                    {"query_from_station_name",ticket.StartStationName},
+                    {"query_to_station_name",ticket.ToStationName},
+                    {"undefined",""}
+                };
+                string submitOrderRequestResult = hhelper.GetResponseByPOST(orderRequestUrl, orderRequesParams);
+                Dictionary<bool, string> dicResult = new Dictionary<bool, string>();
+                if (!string.IsNullOrEmpty(submitOrderRequestResult))
+                {
+                    JObject json = JObject.Parse(submitOrderRequestResult);
+                    dicResult.Add((bool)json["status"], json["messages"].ToString().Replace("[\"", "").Replace("\"]", ""));
+                }
+                return dicResult;
+            });
+        }
+
+        /// <summary>
+        /// 提交订单
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> SubmitOrder(List<SubmitOrder> lstPassengers, string submitOrderCode,string secret)
+        {
+            //检验验证码
+            bool checkOrderCode = await CheckOrderCode(submitOrderCode, secret);
+            string resultMsg = "";
+            if (!checkOrderCode)
+            {
+                return "验证码不正确";
+            }
+            //检查订单信息
+            Dictionary<bool, string> checkOrderInfo = await CheckOrderInfo(lstPassengers, submitOrderCode, secret);
+            if (!checkOrderInfo.Keys.First())
+            {
+                return checkOrderInfo.Values.First();
+            }
+            return resultMsg;
+        }
+
+        /// <summary>
+        /// 获取提交订单凭证
+        /// </summary>
+        /// <returns></returns>
+        public Task<string> GetSubmitOrderToken()
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                string submitOrderTokenUrl = ConfigurationManager.AppSettings["OrderTokenUrl"].ToString(), result = "";
+                Dictionary<string, string> submitOrderTokenParams = new Dictionary<string, string>(){
+                    {"_json_att",""}
+                };
+                result = hhelper.GetResponseByPOST(submitOrderTokenUrl, submitOrderTokenParams);
+                var strToken = Regex.Match(result, @"var\s+globalRepeatSubmitToken\s*=\s*'(?<token>[^']+)';", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
+                if (strToken.Success)
+                {
+                    result = strToken.Groups["token"].Value;
+                }
+                return result;
+            });
+        }
+
+        /// <summary>
+        /// 检验订单验证
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public Task<bool> CheckOrderCode(string code, string token)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                Dictionary<string, string> orderCodeParams = new Dictionary<string, string>(){
+                    {"randCode",code},
+                    {"rand","randp"},
+                    {"_json_att",""},
+                    {"REPEAT_SUBMIT_TOKEN",token}
+                };
+                string orderCodeUrl = ConfigurationManager.AppSettings["OrderVlidateCodeUrl"].ToString();
+                string result = hhelper.GetResponseByPOST(orderCodeUrl, orderCodeParams);
+                bool reqResult = true;
+                if (!string.IsNullOrEmpty(result))
+                {
+                    JObject json = JObject.Parse(result);
+                    result = json["data"].ToString();
+                    if (result == "N")
+                    {
+                        reqResult = false;
+                    }
+                }
+                return reqResult;
+            });
+        }
+
+        /// <summary>
+        /// 检查订单信息
+        /// </summary>
+        /// <param name="lstPassengers"></param>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public async Task<Dictionary<bool, string>> CheckOrderInfo(List<SubmitOrder> lstPassengers, string code, string token)
+        {
+            string oldPassengers = "", passengerTickets = "";
+            int p = 0;
+            foreach (var passenger in lstPassengers)
+            {
+                //证件类型
+                DataGridCell selIDTypeCell = await GetDataGridCell(gridPassenger, p, 4);
+                var idTypeValue = selIDTypeCell.Content as ComboBox;
+                //席别
+                DataGridCell selSeatTypeCell = await GetDataGridCell(gridPassenger, p, 0);
+                var seateTypeValue = selSeatTypeCell.Content as ComboBox;
+                //票种
+                DataGridCell selTickTypeCell = await GetDataGridCell(gridPassenger, p, 3);
+                var tickTypeValue = selTickTypeCell.Content as ComboBox;
+
+                oldPassengers += passenger.PassengerName + "," + idTypeValue.SelectedValue + "," + passenger.PassengerId + "," + tickTypeValue.SelectedValue + "_";
+                passengerTickets += seateTypeValue.SelectedValue + ",0," + tickTypeValue.SelectedValue + "," + passenger.PassengerName + "," + idTypeValue.SelectedValue + "," + passenger.PassengerId + "," + passenger.PassengerMobile + ",N_";
+                p++;
+            }
+            passengerTickets = HttpUtility.HtmlEncode(passengerTickets.TrimEnd('_'));
+            oldPassengers = HttpUtility.HtmlEncode(oldPassengers);
+            Dictionary<string, string> checkOrderParams = new Dictionary<string, string>();
+            checkOrderParams.Add("cancel_flag", "2");
+            checkOrderParams.Add("bed_level_order_num", "000000000000000000000000000000");
+            checkOrderParams.Add("passengerTicketStr", passengerTickets);
+            checkOrderParams.Add("oldPassengerStr", oldPassengers);
+            checkOrderParams.Add("tour_flag", "dc");
+            checkOrderParams.Add("randCode", code);
+            checkOrderParams.Add("_json_att", "");
+            checkOrderParams.Add("REPEAT_SUBMIT_TOKEN", token);
+            string checkOrderInfoUrl = ConfigurationManager.AppSettings["CheckOrderInfoUrl"].ToString();
+            string checkOrderInfoResult = hhelper.GetResponseByPOST(checkOrderInfoUrl, checkOrderParams);
+            bool result = checkOrderInfoResult.Contains("\"submitStatus\":true");
+            string resMsg = "";
+            if (!result)
+            {
+                JObject json = JObject.Parse(checkOrderInfoResult);
+                resMsg = json["data"]["errMsg"].ToString();
+            }
+            Dictionary<bool, string> dicResult = new Dictionary<bool, string>(){
+                {result,resMsg}
+            };
+            return dicResult;
+        }
+
+        //O038850 401 M060350 030 P071950 008 -8
+        //O038850 401 M060350 030 P071950 008 -30
+        //O038850 401 M060350 030 P071950 008 -401
+        //public Task<bool> GetQueueCount()
+        //{
+
+        //}
+
+        /// <summary>
+        /// 获取DataGrid行
+        /// </summary>
+        /// <param name="dataGrid"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public Task<DataGridRow> GetDataGridRow(DataGrid dataGrid, int index)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                DataGridRow row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(index);
+                if (row == null)
+                {
+                    dataGrid.UpdateLayout();
+                    dataGrid.ScrollIntoView(dataGrid.Items[index]);
+                    row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(index);
+                }
+                return row;
+            });
+        }
+
+        /// <summary>
+        /// 获取当前节点的子节点
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="parent"></param>
+        /// <returns></returns>
+        public T GetObjectChildren<T>(Visual parent) where T : Visual
+        {
+            T children = default(T);
+            int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < numVisuals; i++)
+            {
+                Visual v = (Visual)VisualTreeHelper.GetChild(parent, i);
+                children = v as T;
+                if (children == null)
+                {
+                    children = GetObjectChildren<T>(v);
+                }
+                if (children != null)
+                {
+                    break;
+                }
+            }
+            return children;
+        }
+
+        /// <summary>
+        /// 获取DataGrid列
+        /// </summary>
+        /// <param name="dataGrid"></param>
+        /// <param name="row"></param>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        public async Task<DataGridCell> GetDataGridCell(DataGrid dataGrid, int row, int column)
+        {
+            DataGridRow rowContainer = await GetDataGridRow(dataGrid, row);
+            if (rowContainer != null)
+            {
+                DataGridCellsPresenter presenter = GetObjectChildren<DataGridCellsPresenter>(rowContainer);
+
+                DataGridCell cell = (DataGridCell)presenter.ItemContainerGenerator.ContainerFromIndex(column);
+                if (cell == null)
+                {
+                    dataGrid.ScrollIntoView(rowContainer, dataGrid.Columns[column]);
+                    cell = (DataGridCell)presenter.ItemContainerGenerator.ContainerFromIndex(column);
+                }
+                return cell;
+            }
+            return null;
+        }
     }
 }

@@ -38,7 +38,7 @@ namespace JasonLong.Helper
             request.CookieContainer = cookieContainer;
             request.ContentType = "application/x-www-form-urlencoded";
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -79,7 +79,7 @@ namespace JasonLong.Helper
             request.CookieContainer = cookieContainer;
             request.ContentType = "application/x-www-form-urlencoded";
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -129,7 +129,7 @@ namespace JasonLong.Helper
             request.CookieContainer = cookieContainer;
             request.ContentType = "application/x-www-form-urlencoded";
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -137,6 +137,10 @@ namespace JasonLong.Helper
             };
             Encoding encoding = Encoding.GetEncoding("UTF-8");
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            if (response.Cookies.Count > 0)
+            {
+                cookieContainer.Add(response.Cookies);
+            }
             Stream stream = response.GetResponseStream();
             if (response.ContentEncoding.ToLower().Contains("gzip"))//是否压缩
             {
@@ -164,7 +168,7 @@ namespace JasonLong.Helper
             request.CookieContainer = cookieContainer;
             request.ContentType = "application/x-www-form-urlencoded";
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -194,6 +198,10 @@ namespace JasonLong.Helper
                 }
             }
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            if (response.Cookies.Count > 0)
+            {
+                cookieContainer.Add(response.Cookies);
+            }
             Stream responseStream = response.GetResponseStream();
             if (response.ContentEncoding.ToLower().Contains("gzip"))//是否压缩
             {
