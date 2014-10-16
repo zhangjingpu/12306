@@ -26,6 +26,7 @@ namespace TrainAssistant
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            string trainDate = Convert.ToDateTime("2014-10-20").ToString("ddd MMM dd yyyy HH:mm:ss 'GMT'zzz", System.Globalization.CultureInfo.GetCultureInfo("en-US"));
             gridTest.Children.Clear();
             for (int j = 0; j < 2; j++)
             {

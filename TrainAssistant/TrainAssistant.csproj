@@ -71,6 +71,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\OrderQueue.cs" />
+    <Compile Include="Models\QueryOrderWaitTime.cs" />
     <Compile Include="Window1.xaml.cs">
       <DependentUpon>Window1.xaml</DependentUpon>
     </Compile>
@@ -116,7 +118,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\Contacts.cs" />
-    <Compile Include="Models\SeatTypes.cs" />
     <Compile Include="Models\Stations.cs" />
     <Compile Include="Models\SubmitOrder.cs" />
     <Compile Include="Models\Tickets.cs" />

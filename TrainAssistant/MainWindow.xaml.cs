@@ -402,7 +402,7 @@ namespace TrainAssistant
                                 LiShiValue = t.lishiValue.ToString(),
                                 YPInfo = t.ypinfo.ToString(),
                                 ControlTrainDay = t.controltrainday.ToString(),
-                                StartTrainDate = t.starttraindate.ToString(),
+                                StartTrainDate = t.starttraindate.ToString().Substring(0, 4) + "-" + t.starttraindate.ToString().Substring(4, 2) + "-" + t.starttraindate.ToString().Substring(6, 2),
                                 SeatFeature = t.seatfeature.ToString(),
                                 YPEx = t.ypex.ToString(),
                                 TrainSeatFeature = t.trainseatfeature.ToString(),
@@ -426,7 +426,7 @@ namespace TrainAssistant
                                 ZENum = t.zenum.ToString(),
                                 ZYNum = t.zynum.ToString(),
                                 SWZNum = t.swznum.ToString(),
-                                SecretStr=t.secretStr.ToString()
+                                SecretStr = t.secretStr.ToString()
                             });
                         }
                     }
@@ -1105,7 +1105,7 @@ namespace TrainAssistant
                 }
             }
             lblTicket.Content = tickets.FromStationName + "→" + tickets.ToStationName + "(" + tickets.TrainName + ")";
-            lblTicket.Tag = tickets.TrainNo + "," + tickets.YPInfo + "," + tickets.TrainName + "," + tickets.FromStationCode + "," + tickets.ToStationCode;
+            lblTicket.Tag = tickets.StartTrainDate + "," + tickets.TrainNo + "," + tickets.TrainName + "," + tickets.FromStationCode + "," + tickets.ToStationCode + "," + tickets.YPInfo + "," + tickets.LocationCode;
             string purposeCode = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
             Dictionary<bool, string> dicSubmitOrderReq = await SubmitOrderRequest(tickets, purposeCode);
             if (!dicSubmitOrderReq.Keys.First())
@@ -1295,7 +1295,14 @@ namespace TrainAssistant
             }
             var lstPassengers = gridPassenger.ItemsSource as List<SubmitOrder>;
             progressRingAnima.IsActive = true;
-            string orderResult = await SubmitOrder(lstPassengers, txtOrderCode.Text, lblSecretStr.Content.ToString());
+            List<string> lstQueues = new List<string>();
+            var arrQueues = lblTicket.Tag.ToString().Split(',');
+            for (int i = 0; i < arrQueues.Length; i++)
+            {
+                lstQueues.Add(arrQueues[i]);
+            }
+            var arrToken = lblSecretStr.Content.ToString().Split(',');
+            string orderResult = await SubmitOrder(lstPassengers, txtOrderCode.Text, arrToken[0], lstQueues, arrToken[1]);
             lblStatusMsg.Content = orderResult;
             MessageBox.Show(orderResult, "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             progressRingAnima.IsActive = false;
@@ -1313,11 +1320,10 @@ namespace TrainAssistant
             {
                 Thread.Sleep(100);
                 string orderRequestUrl = ConfigurationManager.AppSettings["SubmitOrderRequestUrl"].ToString();
-                string trainDate = ticket.StartTrainDate.Substring(0, 4) + "-" + ticket.StartTrainDate.Substring(4, 2) + "-" + ticket.StartTrainDate.Substring(6, 2);
                 Dictionary<string, string> orderRequesParams = new Dictionary<string, string>()
                 {
                     {"secretStr",ticket.SecretStr},
-                    {"train_date",trainDate},
+                    {"train_date",ticket.StartTrainDate},
                     {"back_train_date",DateTime.Now.ToString("yyyy-MM-dd")},
                     {"tour_flag","dc"},
                     {"purpose_codes",purposeCode},
@@ -1340,20 +1346,74 @@ namespace TrainAssistant
         /// 提交订单
         /// </summary>
         /// <returns></returns>
-        private async Task<string> SubmitOrder(List<SubmitOrder> lstPassengers, string submitOrderCode,string secret)
+        private async Task<string> SubmitOrder(List<SubmitOrder> lstPassengers, string submitOrderCode, string token, List<string> lstQueues, string keyChange)
         {
+            string oldPassengers = "", passengerTickets = "";
+            int p = 0;
+            foreach (var passenger in lstPassengers)
+            {
+                //证件类型
+                DataGridCell selIDTypeCell = await GetDataGridCell(gridPassenger, p, 4);
+                var idTypeValue = selIDTypeCell.Content as ComboBox;
+                //席别
+                DataGridCell selSeatTypeCell = await GetDataGridCell(gridPassenger, p, 0);
+                var seateTypeValue = selSeatTypeCell.Content as ComboBox;
+                //票种
+                DataGridCell selTickTypeCell = await GetDataGridCell(gridPassenger, p, 3);
+                var tickTypeValue = selTickTypeCell.Content as ComboBox;
+
+                oldPassengers += passenger.PassengerName + "," + idTypeValue.SelectedValue + "," + passenger.PassengerId + "," + tickTypeValue.SelectedValue + "_";
+                passengerTickets += seateTypeValue.SelectedValue + ",0," + tickTypeValue.SelectedValue + "," + passenger.PassengerName + "," + idTypeValue.SelectedValue + "," + passenger.PassengerId + "," + passenger.PassengerMobile + ",N_";
+                p++;
+            }
+            passengerTickets = HttpUtility.UrlEncode(passengerTickets.TrimEnd('_'));
+            oldPassengers = HttpUtility.UrlEncode(oldPassengers);
+
             //检验验证码
-            bool checkOrderCode = await CheckOrderCode(submitOrderCode, secret);
+            bool checkOrderCode = await CheckOrderCode(submitOrderCode, token);
             string resultMsg = "";
             if (!checkOrderCode)
             {
                 return "验证码不正确";
             }
             //检查订单信息
-            Dictionary<bool, string> checkOrderInfo = await CheckOrderInfo(lstPassengers, submitOrderCode, secret);
+            Dictionary<bool, string> checkOrderInfo = await CheckOrderInfo(passengerTickets, oldPassengers, submitOrderCode, token);
             if (!checkOrderInfo.Keys.First())
             {
                 return checkOrderInfo.Values.First();
+            }
+            //获取排队
+            OrderQueue orderQueue = await GetQueueCount(lstQueues, token, checkOrderInfo.Values.First());
+            if (orderQueue.OP_2)
+            {
+                return "排队人数（" + orderQueue.countT + "）超过余票数。";
+            }
+            //确认订单
+            Dictionary<bool, string> confirmOrder = await ConfirmOrderQueue(passengerTickets, oldPassengers, submitOrderCode, token, keyChange, lstQueues);
+            if (!confirmOrder.Keys.First())
+            {
+                return confirmOrder.Values.First();
+            }
+            //O038850 401 M060350 030 P071950 008 -8
+            //O038850 401 M060350 030 P071950 008 -30
+            //O038850 401 M060350 030 P071950 008 -401
+
+            //等待出票
+            while (true)
+            {
+                QueryOrderWaitTime queryOrderWaitTime = await QueryOrderWaitTime("", "dc", "", token);
+                if (queryOrderWaitTime.WaitTime <= 0)
+                {
+                    if (!string.IsNullOrEmpty(queryOrderWaitTime.OrderId))
+                    {
+                       resultMsg="出票成功！订单号：【" + queryOrderWaitTime.OrderId + "】";
+                    }
+                    break;
+                }
+                else
+                {
+                    lblStatusMsg.Content = queryOrderWaitTime.Count > 0 ? "前面还有【" + queryOrderWaitTime.WaitCount + "】订单等待处理，大约需等待【" + queryOrderWaitTime.WaitTime + "】秒" : "正在处理订单，大约需要" + queryOrderWaitTime.WaitTime + "秒";
+                }
             }
             return resultMsg;
         }
@@ -1372,12 +1432,18 @@ namespace TrainAssistant
                     {"_json_att",""}
                 };
                 result = hhelper.GetResponseByPOST(submitOrderTokenUrl, submitOrderTokenParams);
+                string strResult = "";
                 var strToken = Regex.Match(result, @"var\s+globalRepeatSubmitToken\s*=\s*'(?<token>[^']+)';", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
                 if (strToken.Success)
                 {
-                    result = strToken.Groups["token"].Value;
+                    strResult = strToken.Groups["token"].Value;
                 }
-                return result;
+                var keyIsChang = Regex.Match(result, @"'key_check_isChange':'(?<key>[^']+)'", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
+                if (keyIsChang.Success)
+                {
+                    strResult += "," + keyIsChang.Groups["key"].Value;
+                }
+                return strResult;
             });
         }
 
@@ -1419,59 +1485,154 @@ namespace TrainAssistant
         /// <param name="lstPassengers"></param>
         /// <param name="code"></param>
         /// <returns></returns>
-        public async Task<Dictionary<bool, string>> CheckOrderInfo(List<SubmitOrder> lstPassengers, string code, string token)
+        public Task<Dictionary<bool, string>> CheckOrderInfo(string passengerTickets, string oldPassengers, string code, string token)
         {
-            string oldPassengers = "", passengerTickets = "";
-            int p = 0;
-            foreach (var passenger in lstPassengers)
+            return Task.Factory.StartNew(() =>
             {
-                //证件类型
-                DataGridCell selIDTypeCell = await GetDataGridCell(gridPassenger, p, 4);
-                var idTypeValue = selIDTypeCell.Content as ComboBox;
-                //席别
-                DataGridCell selSeatTypeCell = await GetDataGridCell(gridPassenger, p, 0);
-                var seateTypeValue = selSeatTypeCell.Content as ComboBox;
-                //票种
-                DataGridCell selTickTypeCell = await GetDataGridCell(gridPassenger, p, 3);
-                var tickTypeValue = selTickTypeCell.Content as ComboBox;
-
-                oldPassengers += passenger.PassengerName + "," + idTypeValue.SelectedValue + "," + passenger.PassengerId + "," + tickTypeValue.SelectedValue + "_";
-                passengerTickets += seateTypeValue.SelectedValue + ",0," + tickTypeValue.SelectedValue + "," + passenger.PassengerName + "," + idTypeValue.SelectedValue + "," + passenger.PassengerId + "," + passenger.PassengerMobile + ",N_";
-                p++;
-            }
-            passengerTickets = HttpUtility.HtmlEncode(passengerTickets.TrimEnd('_'));
-            oldPassengers = HttpUtility.HtmlEncode(oldPassengers);
-            Dictionary<string, string> checkOrderParams = new Dictionary<string, string>();
-            checkOrderParams.Add("cancel_flag", "2");
-            checkOrderParams.Add("bed_level_order_num", "000000000000000000000000000000");
-            checkOrderParams.Add("passengerTicketStr", passengerTickets);
-            checkOrderParams.Add("oldPassengerStr", oldPassengers);
-            checkOrderParams.Add("tour_flag", "dc");
-            checkOrderParams.Add("randCode", code);
-            checkOrderParams.Add("_json_att", "");
-            checkOrderParams.Add("REPEAT_SUBMIT_TOKEN", token);
-            string checkOrderInfoUrl = ConfigurationManager.AppSettings["CheckOrderInfoUrl"].ToString();
-            string checkOrderInfoResult = hhelper.GetResponseByPOST(checkOrderInfoUrl, checkOrderParams);
-            bool result = checkOrderInfoResult.Contains("\"submitStatus\":true");
-            string resMsg = "";
-            if (!result)
-            {
-                JObject json = JObject.Parse(checkOrderInfoResult);
-                resMsg = json["data"]["errMsg"].ToString();
-            }
-            Dictionary<bool, string> dicResult = new Dictionary<bool, string>(){
-                {result,resMsg}
-            };
-            return dicResult;
+                Thread.Sleep(100);
+                Dictionary<string, string> checkOrderParams = new Dictionary<string, string>();
+                checkOrderParams.Add("cancel_flag", "2");
+                checkOrderParams.Add("bed_level_order_num", "000000000000000000000000000000");
+                checkOrderParams.Add("passengerTicketStr", passengerTickets);
+                checkOrderParams.Add("oldPassengerStr", oldPassengers);
+                checkOrderParams.Add("tour_flag", "dc");
+                checkOrderParams.Add("randCode", code);
+                checkOrderParams.Add("_json_att", "");
+                checkOrderParams.Add("REPEAT_SUBMIT_TOKEN", token);
+                string checkOrderInfoUrl = ConfigurationManager.AppSettings["CheckOrderInfoUrl"].ToString();
+                string checkOrderInfoResult = hhelper.GetResponseByPOST(checkOrderInfoUrl, checkOrderParams);
+                bool result = checkOrderInfoResult.Contains("\"submitStatus\":true");
+                string firstSeat = HttpUtility.UrlDecode(passengerTickets);
+                string resMsg = firstSeat.Substring(0, firstSeat.IndexOf(','));
+                if (!result)
+                {
+                    JObject json = JObject.Parse(checkOrderInfoResult);
+                    resMsg = json["data"]["errMsg"].ToString();
+                }
+                Dictionary<bool, string> dicResult = new Dictionary<bool, string>(){
+                    {result,resMsg}
+                };
+                return dicResult;
+            });
         }
 
-        //O038850 401 M060350 030 P071950 008 -8
-        //O038850 401 M060350 030 P071950 008 -30
-        //O038850 401 M060350 030 P071950 008 -401
-        //public Task<bool> GetQueueCount()
-        //{
+        /// <summary>
+        /// 排队
+        /// </summary>
+        /// <param name="strTicks"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public Task<OrderQueue> GetQueueCount(List<string> strTicks, string token, string seate)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                OrderQueue orderQueue = new OrderQueue();
+                string queueCountUrl = ConfigurationManager.AppSettings["TickQueueCountUrl"].ToString(), queueCountResult = "";
+                string trainDate = Convert.ToDateTime(strTicks[0]).ToString("ddd MMM dd yyyy HH:mm:ss 'GMT'zzz", System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+                trainDate = HttpUtility.UrlEncode(trainDate.Replace("08:00", "0800"));
+                Dictionary<string, string> dicQueueParams = new Dictionary<string, string>(){
+                    {"train_date",trainDate},
+                    {"train_no",strTicks[1]},
+                    {"stationTrainCode",strTicks[2]},
+                    {"seatType",seate},
+                    {"fromStationTelecode",strTicks[3]},
+                    {"toStationTelecode",strTicks[4]},
+                    {"leftTicket",strTicks[5]},
+                    {"purpose_codes","00"},
+                    {"_json_att",""},
+                    {"REPEAT_SUBMIT_TOKEN",token}
+                };
+                queueCountResult = hhelper.GetResponseByPOST(queueCountUrl, dicQueueParams);
+                if (!string.IsNullOrEmpty(queueCountResult))
+                {
+                    JObject json = JObject.Parse(queueCountResult);
+                    var jsonData = json["data"];
+                    orderQueue.Count = jsonData["count"].ToString();
+                    orderQueue.countT = jsonData["countT"].ToString();
+                    orderQueue.OP_1 = jsonData["op_1"].ToString();
+                    orderQueue.OP_2 = Convert.ToBoolean(jsonData["op_2"].ToString());
+                    orderQueue.Ticket = jsonData["ticket"].ToString();
+                }
+                return orderQueue;
+            });
+        }
 
-        //}
+        /// <summary>
+        /// 确认订单
+        /// </summary>
+        /// <param name="passengerTickets"></param>
+        /// <param name="oldPassengers"></param>
+        /// <param name="code"></param>
+        /// <param name="token"></param>
+        /// <param name="key"></param>
+        /// <param name="lstQueues"></param>
+        /// <returns></returns>
+        public Task<Dictionary<bool, string>> ConfirmOrderQueue(string passengerTickets, string oldPassengers, string code, string token, string key, List<string> lstQueues)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                string confirmOrderUrl = ConfigurationManager.AppSettings["ConfirmSubmitOrderUrl"].ToString(), confirmOrderResult = "";
+                Dictionary<string, string> dicConfirmOrderParams = new Dictionary<string, string>(){
+                    {"passengerTicketStr",passengerTickets},
+                    {"oldPassengerStr",oldPassengers},
+                    {"randCode",code},
+                    {"purpose_codes","00"},
+                    {"key_check_isChange",key},
+                    {"leftTicketStr",lstQueues[5]},
+                    {"train_location",lstQueues[6]},
+                    {"_json_att",""},
+                    {"REPEAT_SUBMIT_TOKEN",token}
+                };
+                confirmOrderResult = hhelper.GetResponseByPOST(confirmOrderUrl, dicConfirmOrderParams);
+                bool result = confirmOrderResult.Contains("\"submitStatus\":true");
+                string msg = "";
+                if (!result)
+                {
+                    JObject json = JObject.Parse(confirmOrderResult);
+                    msg = json["data"]["errMsg"].ToString();
+                }
+                Dictionary<bool, string> dicResult = new Dictionary<bool, string>()
+                {
+                    {result,msg}
+                };
+                return dicResult;
+            });
+        }
+
+        /// <summary>
+        /// 生成订单等待时间
+        /// </summary>
+        /// <param name="random"></param>
+        /// <param name="tourFlag"></param>
+        /// <param name="jsonAtt"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public Task<QueryOrderWaitTime> QueryOrderWaitTime(string random, string tourFlag, string jsonAtt, string token)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                QueryOrderWaitTime queryOrderWaitTime = new QueryOrderWaitTime();
+                string waitTimeUrl = ConfigurationManager.AppSettings["QueryOrderWaitTimeUrl"].ToString() + "?random={0}&tourFlag={1}&_json_att={2}&REPEAT_SUBMIT_TOKEN={3}";
+                waitTimeUrl = string.Format(waitTimeUrl, random, tourFlag, jsonAtt, token);
+                string responResult = hhelper.GetResponseChartByGET(waitTimeUrl);
+                if (responResult != "-1" || !string.IsNullOrEmpty(responResult))
+                {
+                    JObject json = JObject.Parse(responResult);
+                    var jsonData = json["data"];
+                    queryOrderWaitTime.Count = Convert.ToInt32(jsonData["count"].ToString());
+                    queryOrderWaitTime.OrderId = jsonData["orderId"].ToString();
+                    queryOrderWaitTime.RequestId = jsonData["requestId"].ToString();
+                    queryOrderWaitTime.Status = Convert.ToBoolean(jsonData["queryOrderWaitTimeStatus"].ToString());
+                    queryOrderWaitTime.TourFlag = jsonData["tourFlag"].ToString();
+                    queryOrderWaitTime.WaitCount = Convert.ToInt32(jsonData["waitCount"].ToString());
+                    queryOrderWaitTime.WaitTime = Convert.ToInt32(jsonData["waitTime"].ToString());
+                }
+                return queryOrderWaitTime;
+            });
+        }
 
         /// <summary>
         /// 获取DataGrid行
