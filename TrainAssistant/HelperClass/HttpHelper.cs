@@ -21,6 +21,9 @@ namespace JasonLong.Helper
     {
 
         public CookieContainer cookieContainer = new CookieContainer();
+        public const string ContentType = "application/x-www-form-urlencoded";
+        public const string Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+        public const string UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
 
         /// <summary>
         /// 获取返回的数据
@@ -36,9 +39,9 @@ namespace JasonLong.Helper
             request.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
             request.AllowAutoRedirect = true;
             request.CookieContainer = cookieContainer;
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
+            request.ContentType = ContentType;
+            request.Accept = Accept;
+            request.UserAgent = UserAgent;
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -77,9 +80,9 @@ namespace JasonLong.Helper
             request.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
             request.AllowAutoRedirect = true;
             request.CookieContainer = cookieContainer;
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
+            request.ContentType = ContentType;
+            request.Accept = Accept;
+            request.UserAgent = UserAgent;
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -127,9 +130,9 @@ namespace JasonLong.Helper
             request.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
             request.AllowAutoRedirect = true;
             request.CookieContainer = cookieContainer;
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
+            request.ContentType = ContentType;
+            request.Accept = Accept;
+            request.UserAgent = UserAgent;
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -166,9 +169,9 @@ namespace JasonLong.Helper
             request.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
             request.AllowAutoRedirect = true;
             request.CookieContainer = cookieContainer;
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0";
+            request.ContentType = ContentType;
+            request.Accept = Accept;
+            request.UserAgent = UserAgent;
             request.Timeout = 30000;
             ServicePointManager.ServerCertificateValidationCallback += (se, cert, chain, sslerror) =>
             {
@@ -218,7 +221,7 @@ namespace JasonLong.Helper
         /// <returns></returns>
         public string UnicodeToGBK(string str)
         {
-            MatchCollection match = Regex.Matches(str,@"\\u([\\w{4}])");
+            MatchCollection match = Regex.Matches(str,"\\\\u([\\w{4}])");
             string text=str.Replace(@"\u","");
             char[] charStr = new char[match.Count];
             for (int i = 0; i < charStr.Length; i++)
