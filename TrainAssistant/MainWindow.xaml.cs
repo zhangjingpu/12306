@@ -42,8 +42,8 @@ namespace TrainAssistant
             txtDate.DisplayDateStart = DateTime.Now;
             txtDate.DisplayDateEnd = DateTime.Now.AddDays(19);
             txtDate.Text = txtDate.DisplayDateEnd.Value.ToString("yyyy-MM-dd");
-            chkDayBefore.Content = DateTime.Parse(txtDate.Text).AddDays(-1).ToString("yyyy-MM-dd");
-            chkTwoDayBefore.Content = DateTime.Parse(txtDate.Text).AddDays(-2).ToString("yyyy-MM-dd");
+            //chkDayBefore.Content = DateTime.Parse(txtDate.Text).AddDays(-1).ToString("yyyy-MM-dd");
+            //chkTwoDayBefore.Content = DateTime.Parse(txtDate.Text).AddDays(-2).ToString("yyyy-MM-dd");
 
             IsShowLoginPopup(true);
 
@@ -205,6 +205,9 @@ namespace TrainAssistant
                 string loginCodeResult = await ticketHelper.ValidateLoginCode(txtValidateCode.Text.Trim());
                 if (loginCodeResult.Contains("验证码错误"))
                 {
+                    lblErrorMsg.Content = loginCodeResult;
+                    btnLogin.IsEnabled = true;
+                    progressRingAnima.IsActive = false;
                     return;
                 }
                 lblErrorMsg.Content = await ticketHelper.Login(txtUserName.Text.Trim(), txtPassword.Password.Trim(), txtValidateCode.Text.Trim(), (bool)chkRemeberMe.IsChecked, (bool)chkAutoLogin.IsChecked);

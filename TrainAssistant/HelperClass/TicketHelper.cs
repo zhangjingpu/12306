@@ -174,11 +174,7 @@ namespace JasonLong.Helper
                     string errormsg = json["messages"].ToString();
                     if (errormsg != "[]")
                     {
-                        var msg = Regex.Match(errormsg, "[\r\n\"(?<msg>[^\"]+)\"\r\n]", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
-                        if (msg.Success)
-                        {
-                            result = msg.Groups["msg"].Value;
-                        }
+                        result = errormsg.Replace("[", "").Replace("]", "").Trim();
                     }
                     else
                     {
@@ -248,7 +244,7 @@ namespace JasonLong.Helper
                 {
                     try
                     {
-                        var login = Regex.Match(result, @"var\s+clicktitle\s*=\s*'(?<login>[^']+)';", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
+                        var login = Regex.Match(result, @"var\s+sessionInit\s*=\s*'(?<login>[^']+)';", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
                         if (login.Success)
                         {
                             result = login.Groups["login"].Value.ToString();

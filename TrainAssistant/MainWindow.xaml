@@ -242,16 +242,36 @@
                         </Grid.ColumnDefinitions>
                         <Label Target="{Binding ElementName=txtStartAddress}" Content="始发站(_S)："  Grid.Row="0" Grid.Column="0" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
                         <ComboBox Height="27" Name="txtStartCity" Grid.Column="1" Grid.Row="0" Controls:TextboxHelper.Watermark="输入始发站" IsEditable="True" KeyUp="txtStartCity_KeyUp" StaysOpenOnEdit="True" IsTextSearchEnabled="True" />
-                        <Label Content="到达站(_E)：" HorizontalContentAlignment="Right" Grid.Row="0" Grid.Column="2" Target="{Binding ElementName=txtEndAddress}" VerticalContentAlignment="Center" />
+                        <Border Grid.Row="0" Grid.Column="2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Content="↔" Grid.Column="0" Name="btnChangeAddress" Width="20" Height="27" Style="{DynamicResource SquareButtonStyle}" Click="btnChangeAddress_Click" />
+                                <Label Content="到达站(_E)：" Grid.Column="1" HorizontalContentAlignment="Right"  Target="{Binding ElementName=txtEndAddress}" VerticalContentAlignment="Center" />
+                            </Grid>
+                        </Border>
                         <ComboBox Height="27" Name="txtEndCity" Controls:TextboxHelper.Watermark="输入到达站" Grid.Column="3" Grid.Row="0" IsEditable="True" StaysOpenOnEdit="True" IsTextSearchEnabled="True" KeyUp="txtEndCity_KeyUp" />
                         <Label Content="乘车日期(_D)：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="0" Grid.Column="4" Target="{Binding ElementName=txtDate}" />
-                        <DatePicker Height="27" Grid.Column="5" Grid.Row="0" Name="txtDate" FirstDayOfWeek="Sunday" MouseUp="txtDate_MouseUp" SelectedDateFormat="Short" />
-                        <Border Grid.Column="6" Grid.ColumnSpan="2">
+                        <Border Grid.Column="5" Grid.ColumnSpan="2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="20"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Content="-" Grid.Column="0" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnPrevDate" />
+                                <DatePicker Height="27" Grid.Column="1" Name="txtDate" FirstDayOfWeek="Sunday" MouseUp="txtDate_MouseUp" SelectedDateFormat="Short" Margin="5,0" />
+                                <Button Content="+" Grid.Column="2" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnNextDate" />
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="7">
                             <Grid Name="gridPurposeType">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
                                 <RadioButton Content="普通" Tag="ADULT" Grid.Column="1" Height="17" Name="rdoNormal" IsChecked="True" GroupName="rdoPurpose"/>
                                 <RadioButton Content="学生" Tag="0X00" Grid.Column="2" Height="17" Name="rdoStudent" GroupName="rdoPurpose"/>
@@ -274,8 +294,7 @@
                                     <ColumnDefinition Width="100"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <CheckBox Name="chkDayBefore" Height="15" Grid.Column="0" Content="前一天" IsChecked="True" HorizontalAlignment="Center"/>
-                                <CheckBox Name="chkTwoDayBefore" Height="15" Grid.Column="1" Content="前两天" IsChecked="True"/>
+                                
                             </Grid>
                         </Border>
                         <Label Content="车次类型：" Grid.Row="2" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
@@ -307,7 +326,7 @@
                                     <ColumnDefinition Width="80"/>
                                     <ColumnDefinition Width="110"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Content="切换地址" Grid.Column="1" Name="btnChangeAddress" Width="100" Height="27" HorizontalAlignment="Right" Style="{DynamicResource SquareButtonStyle}" Click="btnChangeAddress_Click" />
+                                
                                 <CheckBox Name="chkAutoSearch" Content="自动搜索" Height="15" Grid.Column="2" HorizontalAlignment="Right" Click="chkAutoSearch_Click"/>
                                 <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="3" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True"/>
                             </Grid>
