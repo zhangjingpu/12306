@@ -510,7 +510,7 @@ namespace TrainAssistant
             progressRingAnima.IsActive = true;
             List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), txtStartCity.SelectedValue.ToString(), txtEndCity.SelectedValue.ToString(), isNormal);
             gridTrainList.ItemsSource = ticketModel;
-            lblTicketCount.Content = txtStartCity.Text + "-->" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
+            lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
             progressRingAnima.IsActive = false;
         }
 
@@ -540,17 +540,25 @@ namespace TrainAssistant
             gridOpacity.Visibility = Visibility.Visible;
             orderPopup.Visibility = Visibility.Visible;
             List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
-            int row = contacts.Count;//(int)Math.Ceiling((double)contacts.Count / 3);
+            int row = contacts.Count, cell = 5;
             while (row-- > 0)
             {
                 gContacts.RowDefinitions.Add(new RowDefinition()
                 {
-                    Height = new GridLength()
+                    Height = new GridLength(15)
+                });
+            }
+            while (cell-- > 0)
+            {
+                gContacts.ColumnDefinitions.Add(new ColumnDefinition()
+                {
+                    Width = new GridLength()
                 });
             }
             if (contacts.Count > 0)
             {
                 gContacts.Children.Clear();
+                int r = 0, c = 0, rs = (int)Math.Ceiling((double)contacts.Count / 5);
                 for (int i = 0; i < contacts.Count; i++)
                 {
                     CheckBox chkContact = new CheckBox()
@@ -562,8 +570,17 @@ namespace TrainAssistant
                     };
                     chkContact.Click += chkContact_Click;
                     gContacts.Children.Add(chkContact);
-                    chkContact.SetValue(Grid.RowProperty, i);
-                    chkContact.SetValue(Grid.ColumnProperty, 0);
+                    if ((i % 5) == 0)
+                    {
+                        r += 1;
+                        c = 0;
+                    }
+                    else
+                    {
+                        c++;
+                    }
+                    chkContact.SetValue(Grid.RowProperty, r);
+                    chkContact.SetValue(Grid.ColumnProperty, c);
                 }
             }
             lblSecretStr.Content = await ticketHelper.GetSubmitOrderToken();
@@ -785,7 +802,7 @@ namespace TrainAssistant
                 {
                     if (!string.IsNullOrEmpty(queryOrderWaitTime.OrderId))
                     {
-                       resultMsg="出票成功！订单号：【" + queryOrderWaitTime.OrderId + "】";
+                        resultMsg = "出票成功！订单号：【" + queryOrderWaitTime.OrderId + "】";
                     }
                     break;
                 }
