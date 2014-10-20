@@ -240,20 +240,9 @@ namespace JasonLong.Helper
                 Thread.Sleep(100);
                 var url = ConfigurationManager.AppSettings["LogoutUrl"].ToString();
                 string result = httpHelper.GetResponseChartByGET(url);
-                if (result != "")
+                if (!string.IsNullOrEmpty(result))
                 {
-                    try
-                    {
-                        var login = Regex.Match(result, @"var\s+sessionInit\s*=\s*'(?<login>[^']+)';", RegexOptions.Singleline, TimeSpan.FromSeconds(10));
-                        if (login.Success)
-                        {
-                            result = login.Groups["login"].Value.ToString();
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        result = "错误";
-                    }
+                    result = "已成功注销";
                 }
                 return result;
             });

@@ -239,8 +239,10 @@ namespace TrainAssistant
         {
             try
             {
+                progressRingAnima.IsActive = true;
                 var result = await ticketHelper.Logout();
-                if (result == "登录")
+                progressRingAnima.IsActive = false;
+                if (result.Contains("已成功注销"))
                 {
                     lblLoginName.Text = "登录";
                     IsShowLoginPopup(true);
@@ -248,6 +250,7 @@ namespace TrainAssistant
             }
             catch (Exception)
             {
+                progressRingAnima.IsActive = false;
                 lblStatusMsg.Content = "注销异常";
             }
         }
@@ -466,10 +469,18 @@ namespace TrainAssistant
         private void btnChangeAddress_Click(object sender, RoutedEventArgs e)
         {
             string startStation = txtStartCity.Text.ToString();
+            var lstFormStations = txtStartCity.ItemsSource as List<Stations>;
             string endStation = txtEndCity.Text.ToString();
+            var lstToStations = txtEndCity.ItemsSource as List<Stations>;
 
             txtStartCity.Text = endStation;
             txtEndCity.Text = startStation;
+            txtStartCity.ItemsSource = lstToStations;
+            txtStartCity.DisplayMemberPath = "ZHName";
+            txtStartCity.SelectedValuePath = "Code";
+            txtEndCity.ItemsSource = lstFormStations;
+            txtEndCity.DisplayMemberPath = "ZHName";
+            txtEndCity.SelectedValuePath = "Code";
         }
 
         //自动搜索
@@ -500,8 +511,14 @@ namespace TrainAssistant
                 return;
             }
             string isNormal = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
+            var formStation = (from f in txtStartCity.ItemsSource as List<Stations>
+                               where f.ZHName == txtStartCity.Text
+                               select f).FirstOrDefault<Stations>();
+            var toStation = (from t in txtEndCity.ItemsSource as List<Stations>
+                             where t.ZHName == txtEndCity.Text
+                             select t).FirstOrDefault<Stations>();
             progressRingAnima.IsActive = true;
-            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), txtStartCity.SelectedValue.ToString(), txtEndCity.SelectedValue.ToString(), isNormal);
+            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), formStation.Code.ToString(), toStation.Code.ToString(), isNormal);
             gridTrainList.ItemsSource = ticketModel;
             lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
             progressRingAnima.IsActive = false;
@@ -831,7 +848,7 @@ namespace TrainAssistant
         //前一天日期
         private void btnPrevDate_Click(object sender, RoutedEventArgs e)
         {
-            var date=DateTime.Parse(txtDate.Text).AddDays(-1);
+            var date = DateTime.Parse(txtDate.Text).AddDays(-1);
             if (date <= txtDate.DisplayDateStart)
             {
                 btnPrevDate.IsEnabled = false;
