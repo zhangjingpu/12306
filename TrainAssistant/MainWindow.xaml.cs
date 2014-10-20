@@ -539,6 +539,15 @@ namespace TrainAssistant
             progressRingAnima.IsActive = true;
             gridOpacity.Visibility = Visibility.Visible;
             orderPopup.Visibility = Visibility.Visible;
+            await GetContacts();
+            lblSecretStr.Content = await ticketHelper.GetSubmitOrderToken();
+            await GetOrderCode();
+            progressRingAnima.IsActive = false;
+        }
+
+        //加载乘客
+        private async Task GetContacts()
+        {
             List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
             int row = contacts.Count, cell = 5;
             while (row-- > 0)
@@ -570,22 +579,22 @@ namespace TrainAssistant
                     };
                     chkContact.Click += chkContact_Click;
                     gContacts.Children.Add(chkContact);
-                    if ((i % 5) == 0)
+                    if (i > 0)
                     {
-                        r += 1;
-                        c = 0;
-                    }
-                    else
-                    {
-                        c++;
+                        if ((i % 5) == 0)
+                        {
+                            r += 1;
+                            c = 0;
+                        }
+                        else
+                        {
+                            c++;
+                        }
                     }
                     chkContact.SetValue(Grid.RowProperty, r);
                     chkContact.SetValue(Grid.ColumnProperty, c);
                 }
             }
-            lblSecretStr.Content = await ticketHelper.GetSubmitOrderToken();
-            await GetOrderCode();
-            progressRingAnima.IsActive = false;
         }
 
         //选择乘客
@@ -683,6 +692,18 @@ namespace TrainAssistant
         private async void tabContact_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             await BindContact(true);
+        }
+
+        //重新加载乘客
+        private async void hyLinkLoadContact_Click(object sender, RoutedEventArgs e)
+        {
+            progressRingAnima.IsActive = true;
+            bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
+            if (result)
+            {
+                await GetContacts();
+            }
+            progressRingAnima.IsActive = false;
         }
 
         //查询联系人

@@ -115,7 +115,16 @@
                 </Button>
                 <Border Grid.Row="1" Grid.ColumnSpan="2">
                     <GroupBox Header="联系人" Margin="0">
-                        <Grid Name="gContacts" Margin="7"/>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Margin="7">
+                                <Hyperlink Name="hyLinkLoadContact" Click="hyLinkLoadContact_Click">重新加载乘客</Hyperlink>
+                            </TextBlock>
+                            <Grid Name="gContacts" Margin="7,0,7,7" Grid.Row="1"/>
+                        </Grid>
                     </GroupBox>
                 </Border>
                 <Border Grid.Row="3" Grid.ColumnSpan="2">
@@ -140,13 +149,6 @@
                                         </Style>
                                     </DataGridComboBoxColumn.ElementStyle>
                                 </DataGridComboBoxColumn>
-                                <!--<DataGridTemplateColumn Header="席别">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding Path=SeatType}" DisplayMemberPath="Value" SelectedValuePath="Key" SelectedIndex="0" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>-->
                                 <DataGridTextColumn Header="姓名" Binding="{Binding Path=PassengerName}" IsReadOnly="True"/>
                                 <DataGridTextColumn Header="手机号" Binding="{Binding Path=PassengerMobile}" IsReadOnly="True"/>
                                 <DataGridComboBoxColumn Header="票种">
@@ -167,13 +169,6 @@
                                         </Style>
                                     </DataGridComboBoxColumn.ElementStyle>
                                 </DataGridComboBoxColumn>
-                                <!--<DataGridTemplateColumn Header="票种">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding Path=TickType}" DisplayMemberPath="Key" SelectedValuePath="Value" SelectedIndex="0"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>-->
                                 <DataGridComboBoxColumn Header="证件类型">
                                     <DataGridComboBoxColumn.EditingElementStyle>
                                         <Style TargetType="ComboBox">
@@ -192,13 +187,6 @@
                                         </Style>
                                     </DataGridComboBoxColumn.ElementStyle>
                                 </DataGridComboBoxColumn>
-                                <!--<DataGridTemplateColumn Header="证件类型">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding Path=IDType}" DisplayMemberPath="Key" SelectedValuePath="Value" SelectedIndex="0"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>-->
                                 <DataGridTextColumn Header="证件号码" Binding="{Binding Path=PassengerId}" IsReadOnly="True" Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>
