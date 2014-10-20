@@ -371,13 +371,6 @@ namespace TrainAssistant
             }
         }
 
-
-        //展开日期
-        private void txtDate_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            txtDate.IsDropDownOpen = true;
-        }
-
         //选择全部车类
         private void chkAll_Click(object sender, RoutedEventArgs e)
         {
@@ -548,51 +541,55 @@ namespace TrainAssistant
         //加载乘客
         private async Task GetContacts()
         {
-            List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
-            int row = contacts.Count, cell = 5;
-            while (row-- > 0)
+            bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
+            if (result)
             {
-                gContacts.RowDefinitions.Add(new RowDefinition()
+                List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
+                int row = contacts.Count, cell = 5;
+                while (row-- > 0)
                 {
-                    Height = new GridLength(15)
-                });
-            }
-            while (cell-- > 0)
-            {
-                gContacts.ColumnDefinitions.Add(new ColumnDefinition()
-                {
-                    Width = new GridLength()
-                });
-            }
-            if (contacts.Count > 0)
-            {
-                gContacts.Children.Clear();
-                int r = 0, c = 0, rs = (int)Math.Ceiling((double)contacts.Count / 5);
-                for (int i = 0; i < contacts.Count; i++)
-                {
-                    CheckBox chkContact = new CheckBox()
+                    gContacts.RowDefinitions.Add(new RowDefinition()
                     {
-                        Content = contacts[i].PassengerName,
-                        Name = "chk" + contacts[i].Code,
-                        Height = 15,
-                        Tag = contacts[i].PassengerTypeName + "#" + contacts[i].PassengerName + "#" + contacts[i].PassengerIdTypeName + "#" + contacts[i].PassengerIdNo + "#" + contacts[i].Mobile
-                    };
-                    chkContact.Click += chkContact_Click;
-                    gContacts.Children.Add(chkContact);
-                    if (i > 0)
+                        Height = new GridLength(15)
+                    });
+                }
+                while (cell-- > 0)
+                {
+                    gContacts.ColumnDefinitions.Add(new ColumnDefinition()
                     {
-                        if ((i % 5) == 0)
+                        Width = new GridLength()
+                    });
+                }
+                if (contacts.Count > 0)
+                {
+                    gContacts.Children.Clear();
+                    int r = 0, c = 0, rs = (int)Math.Ceiling((double)contacts.Count / 5);
+                    for (int i = 0; i < contacts.Count; i++)
+                    {
+                        CheckBox chkContact = new CheckBox()
                         {
-                            r += 1;
-                            c = 0;
-                        }
-                        else
+                            Content = contacts[i].PassengerName,
+                            Name = "chk" + contacts[i].Code,
+                            Height = 15,
+                            Tag = contacts[i].PassengerTypeName + "#" + contacts[i].PassengerName + "#" + contacts[i].PassengerIdTypeName + "#" + contacts[i].PassengerIdNo + "#" + contacts[i].Mobile
+                        };
+                        chkContact.Click += chkContact_Click;
+                        gContacts.Children.Add(chkContact);
+                        if (i > 0)
                         {
-                            c++;
+                            if ((i % 5) == 0)
+                            {
+                                r += 1;
+                                c = 0;
+                            }
+                            else
+                            {
+                                c++;
+                            }
                         }
+                        chkContact.SetValue(Grid.RowProperty, r);
+                        chkContact.SetValue(Grid.ColumnProperty, c);
                     }
-                    chkContact.SetValue(Grid.RowProperty, r);
-                    chkContact.SetValue(Grid.ColumnProperty, c);
                 }
             }
         }
@@ -698,11 +695,7 @@ namespace TrainAssistant
         private async void hyLinkLoadContact_Click(object sender, RoutedEventArgs e)
         {
             progressRingAnima.IsActive = true;
-            bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
-            if (result)
-            {
-                await GetContacts();
-            }
+            await GetContacts();
             progressRingAnima.IsActive = false;
         }
 
@@ -833,6 +826,31 @@ namespace TrainAssistant
                 }
             }
             return resultMsg;
+        }
+
+        //前一天日期
+        private void btnPrevDate_Click(object sender, RoutedEventArgs e)
+        {
+            var date=DateTime.Parse(txtDate.Text).AddDays(-1);
+            if (date <= txtDate.DisplayDateStart)
+            {
+                btnPrevDate.IsEnabled = false;
+            }
+            txtDate.Text = date.ToString();
+            btnNextDate.IsEnabled = true;
+        }
+
+        //后一天日期
+        private void btnNextDate_Click(object sender, RoutedEventArgs e)
+        {
+            var date = DateTime.Parse(txtDate.Text).AddDays(1);
+            if (date >= txtDate.DisplayDateEnd)
+            {
+                btnNextDate.IsEnabled = false;
+                date = date.AddDays(-1);
+            }
+            txtDate.Text = date.ToString();
+            btnPrevDate.IsEnabled = true;
         }
 
     }

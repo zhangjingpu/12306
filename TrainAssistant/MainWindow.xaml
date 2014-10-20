@@ -249,9 +249,9 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="20"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Content="-" Grid.Column="0" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnPrevDate" />
-                                <DatePicker Height="27" Grid.Column="1" Name="txtDate" FirstDayOfWeek="Sunday" MouseUp="txtDate_MouseUp" SelectedDateFormat="Short" Margin="5,0" />
-                                <Button Content="+" Grid.Column="2" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnNextDate" />
+                                <Button Content="-" Grid.Column="0" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnPrevDate" Click="btnPrevDate_Click" />
+                                <DatePicker Height="27" Grid.Column="1" Name="txtDate" FirstDayOfWeek="Sunday" SelectedDateFormat="Short" Margin="5,0" />
+                                <Button Content="+" Grid.Column="2" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnNextDate" Click="btnNextDate_Click" />
                             </Grid>
                         </Border>
                         <Border Grid.Column="7">
