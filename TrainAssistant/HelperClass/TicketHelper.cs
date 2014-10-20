@@ -57,6 +57,42 @@ namespace JasonLong.Helper
         }
 
         /// <summary>
+        /// 读取搜索条件
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public Task<List<Query>> ReadQuerys(string fileName)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                List<Query> lstQuerys = new List<Query>();
+                if (File.Exists("Query.txt"))
+                {
+                    using (StreamReader reader = new StreamReader("Query.txt", Encoding.UTF8))
+                    {
+                        reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                        string strQuery = reader.ReadToEnd();
+                        if (strQuery.Count() > 0)
+                        {
+                            JObject jsonQuery = JObject.Parse(strQuery);
+                            var jsonQueryData = (from q in jsonQuery["querys"]
+                                                select new { user=q["user"],fromName = q["fromStationName"], fromCode = q["formStationCode"], toName = q["toStationName"], toCode = q["toStationCode"], date = q["trainDate"] }).ToList();
+                            if (jsonQueryData.Count > 0)
+                            {
+                                foreach (var q in jsonQueryData)
+                                {
+                                    lstQuerys.Add(new Query() { User = q.user.ToString(), FromName = q.fromName.ToString(), FromCode = q.fromCode.ToString(), ToName = q.toName.ToString(), ToCode = q.toCode.ToString(), Date = q.date.ToString() });
+                                }
+                            }
+                        }
+                    }
+                }
+                return lstQuerys;
+            });
+        }
+
+        /// <summary>
         /// 保存文件
         /// </summary>
         /// <param name="fileName"></param>
@@ -193,7 +229,11 @@ namespace JasonLong.Helper
                                 {
                                     users.Add(new Users() { Name = userName, Password = password, IsAutoLogin = isAutoLogin });
                                 }
-
+                                else
+                                {
+                                    u.IsAutoLogin = isAutoLogin;
+                                    u.Password = password;
+                                }
                                 JObject obj = new JObject(
                                     new JProperty("users", new JArray(
                                         from j in users

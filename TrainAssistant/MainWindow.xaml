@@ -319,7 +319,7 @@
                                 <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="3" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True"/>
                             </Grid>
                         </Border>
-                        <DataGrid Grid.Row="5" Grid.ColumnSpan="8" Name="gridTrainList" AutoGenerateColumns="False" Margin="0,5,0,0" IsReadOnly="True">
+                        <DataGrid Grid.Row="5" Grid.ColumnSpan="8" Name="gridTrainList" AutoGenerateColumns="False" Margin="0,5,0,0" IsReadOnly="True" MouseDoubleClick="gridTrainList_MouseDoubleClick" SelectionMode="Single">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="车次" Width="110" Binding="{Binding Path=TrainName}" />
                                 <DataGridTextColumn Header="出发站" Width="160" Binding="{Binding Path=From}"/>

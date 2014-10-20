@@ -42,8 +42,6 @@ namespace TrainAssistant
             txtDate.DisplayDateStart = DateTime.Now;
             txtDate.DisplayDateEnd = DateTime.Now.AddDays(19);
             txtDate.Text = txtDate.DisplayDateEnd.Value.ToString("yyyy-MM-dd");
-            //chkDayBefore.Content = DateTime.Parse(txtDate.Text).AddDays(-1).ToString("yyyy-MM-dd");
-            //chkTwoDayBefore.Content = DateTime.Parse(txtDate.Text).AddDays(-2).ToString("yyyy-MM-dd");
 
             IsShowLoginPopup(true);
 
@@ -225,6 +223,20 @@ namespace TrainAssistant
                 IsShowLoginPopup(false);
                 lblLoginName.Text = "欢迎，" + loginName.Substring(0, loginName.IndexOf("登录成功"));
                 lblStatusMsg.Content = loginName.Substring(loginName.IndexOf("登录成功"));
+                //初始化查询条件
+                string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
+                var lstQuerys = await ticketHelper.ReadQuerys("Query");
+                var query = (from q in lstQuerys
+                            where q.User == strUser
+                            select q).FirstOrDefault<Query>();
+                if (query != null)
+                {
+                    txtStartCity.Text = query.FromName.ToString();
+                    txtStartCity.SelectedValue = query.FromCode.ToString();
+                    txtEndCity.Text = query.ToName.ToString();
+                    txtEndCity.SelectedValue = query.ToCode.ToString();
+                    txtDate.Text = query.Date.ToString();
+                }
             }
             else
             {
@@ -337,6 +349,47 @@ namespace TrainAssistant
                 }
                 return tickType;
             });
+        }
+
+        /// <summary>
+        /// 预订
+        /// </summary>
+        /// <returns></returns>
+        private async Task ReservateTicket()
+        {
+            Tickets tickets = gridTrainList.SelectedItem as Tickets;
+            if (tickets != null)
+            {
+                if (tickets.IsCanBuy)
+                {
+                    progressRingAnima.IsActive = true;
+                    seatTypes = "";
+                    for (int o = 4; o < gridTrainList.Columns.Count - 1; o++)
+                    {
+                        string str = (gridTrainList.Columns[o].GetCellContent(gridTrainList.SelectedItem) as TextBlock).Text;
+                        if (!str.Contains("--") && !str.Contains("无"))
+                        {
+                            seatTypes += gridTrainList.Columns[o].Header.ToString() + "@";
+                        }
+                    }
+                    lblTicket.Content = tickets.FromStationName + "→" + tickets.ToStationName + "(" + tickets.TrainName + ")";
+                    lblTicket.Tag = tickets.StartTrainDate + "," + tickets.TrainNo + "," + tickets.TrainName + "," + tickets.FromStationCode + "," + tickets.ToStationCode + "," + tickets.YPInfo + "," + tickets.LocationCode;
+                    string purposeCode = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
+                    Dictionary<bool, string> dicSubmitOrderReq = await ticketHelper.SubmitOrderRequest(tickets, purposeCode);
+                    if (!dicSubmitOrderReq.Keys.First())
+                    {
+                        progressRingAnima.IsActive = false;
+                        MessageBox.Show(dicSubmitOrderReq.Values.First(), "提示", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    gridOpacity.Visibility = Visibility.Visible;
+                    orderPopup.Visibility = Visibility.Visible;
+                    await GetContacts();
+                    lblSecretStr.Content = await ticketHelper.GetSubmitOrderToken();
+                    await GetOrderCode();
+                    progressRingAnima.IsActive = false;
+                }
+            }
         }
 
         /// <summary>
@@ -511,48 +564,66 @@ namespace TrainAssistant
                 return;
             }
             string isNormal = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
-            var formStation = (from f in txtStartCity.ItemsSource as List<Stations>
-                               where f.ZHName == txtStartCity.Text
+            Stations formStation = null;
+            Stations toStation = null;
+            if (txtStartCity.ItemsSource != null)
+            {
+                formStation = (from f in txtStartCity.ItemsSource as List<Stations>
+                               where f.ZHName == txtStartCity.Text.Trim()
                                select f).FirstOrDefault<Stations>();
-            var toStation = (from t in txtEndCity.ItemsSource as List<Stations>
-                             where t.ZHName == txtEndCity.Text
+            }
+            if (txtEndCity.ItemsSource != null)
+            {
+                toStation = (from t in txtEndCity.ItemsSource as List<Stations>
+                             where t.ZHName == txtEndCity.Text.Trim()
                              select t).FirstOrDefault<Stations>();
+            }
+            string fromStationCode = formStation == null ? txtStartCity.SelectedValue.ToString() : formStation.Code;
+            string toStationCode = toStation == null ? txtEndCity.SelectedValue.ToString() : toStation.Code;
             progressRingAnima.IsActive = true;
-            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), formStation.Code.ToString(), toStation.Code.ToString(), isNormal);
+            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, isNormal);
             gridTrainList.ItemsSource = ticketModel;
             lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
+            //保存查询条件
+            string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
+            var lstQuerys = await ticketHelper.ReadQuerys("Query");
+            var query = (from q in lstQuerys
+                         where q.User == strUser
+                         select q).FirstOrDefault<Query>();
+            if (query == null)
+            {
+                lstQuerys.Add(new Query() { User = strUser, FromName = txtStartCity.Text.Trim(), FromCode = fromStationCode, ToName = txtEndCity.Text.Trim(), ToCode = toStationCode, Date = txtDate.Text });
+            }
+            else
+            {
+                query.Date = txtDate.Text;
+                query.FromCode = fromStationCode;
+                query.FromName = txtStartCity.Text.Trim();
+                query.ToCode = toStationCode;
+                query.ToName = txtEndCity.Text.Trim();
+            }
+            JObject jQuery = new JObject()
+            {
+                new JProperty("querys",new JArray(
+                        from q in lstQuerys
+                        select  new JObject(
+                            new JProperty("user",q.User),
+                            new JProperty("fromStationName",q.FromName),
+                            new JProperty("formStationCode",q.FromCode),
+                            new JProperty("toStationName",q.ToName),
+                            new JProperty("toStationCode",q.ToCode),
+                            new JProperty("trainDate",q.Date)
+                        )
+                    ))
+            };
+            ticketHelper.SaveFile("Query", jQuery.ToString());
             progressRingAnima.IsActive = false;
         }
 
         //预订
         private async void Reservate_Click(object sender, RoutedEventArgs e)
         {
-            Tickets tickets = gridTrainList.SelectedItem as Tickets;
-            seatTypes = "";
-            for (int o = 4; o < gridTrainList.Columns.Count - 1; o++)
-            {
-                string str = (gridTrainList.Columns[o].GetCellContent(gridTrainList.SelectedItem) as TextBlock).Text;
-                if (!str.Contains("--") && !str.Contains("无"))
-                {
-                    seatTypes += gridTrainList.Columns[o].Header.ToString() + "@";
-                }
-            }
-            lblTicket.Content = tickets.FromStationName + "→" + tickets.ToStationName + "(" + tickets.TrainName + ")";
-            lblTicket.Tag = tickets.StartTrainDate + "," + tickets.TrainNo + "," + tickets.TrainName + "," + tickets.FromStationCode + "," + tickets.ToStationCode + "," + tickets.YPInfo + "," + tickets.LocationCode;
-            string purposeCode = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
-            Dictionary<bool, string> dicSubmitOrderReq = await ticketHelper.SubmitOrderRequest(tickets, purposeCode);
-            if (!dicSubmitOrderReq.Keys.First())
-            {
-                MessageBox.Show(dicSubmitOrderReq.Values.First(), "提示", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            progressRingAnima.IsActive = true;
-            gridOpacity.Visibility = Visibility.Visible;
-            orderPopup.Visibility = Visibility.Visible;
-            await GetContacts();
-            lblSecretStr.Content = await ticketHelper.GetSubmitOrderToken();
-            await GetOrderCode();
-            progressRingAnima.IsActive = false;
+            await ReservateTicket();
         }
 
         //加载乘客
@@ -868,6 +939,12 @@ namespace TrainAssistant
             }
             txtDate.Text = date.ToString();
             btnPrevDate.IsEnabled = true;
+        }
+
+        //双击行
+        private async void gridTrainList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            await ReservateTicket();
         }
 
     }
