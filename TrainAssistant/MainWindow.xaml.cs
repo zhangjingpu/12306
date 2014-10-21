@@ -160,6 +160,7 @@ namespace TrainAssistant
         private async Task GetOrderCode()
         {
             progressRingAnima.IsActive = true;
+            lblStatusMsg.Content = "获取订单验证码中...";
             Dictionary<BitmapImage, string> dicOrderCode = await ticketHelper.GetSubmitOrderCode();
             imgOrderCode.Source = dicOrderCode.Keys.First();
             txtOrderCode.Text = dicOrderCode.Values.First();
@@ -362,6 +363,7 @@ namespace TrainAssistant
             {
                 if (tickets.IsCanBuy)
                 {
+                    lblStatusMsg.Content = "预订中...";
                     progressRingAnima.IsActive = true;
                     seatTypes = "";
                     for (int o = 4; o < gridTrainList.Columns.Count - 1; o++)
@@ -385,9 +387,11 @@ namespace TrainAssistant
                     gridOpacity.Visibility = Visibility.Visible;
                     orderPopup.Visibility = Visibility.Visible;
                     await GetContacts();
+                    lblStatusMsg.Content = "获取提交订单凭证中...";
                     lblSecretStr.Content = await ticketHelper.GetSubmitOrderToken();
                     await GetOrderCode();
                     progressRingAnima.IsActive = false;
+                    lblStatusMsg.Content = "订单信息初始化完成";
                 }
             }
         }
@@ -522,8 +526,10 @@ namespace TrainAssistant
         private void btnChangeAddress_Click(object sender, RoutedEventArgs e)
         {
             string startStation = txtStartCity.Text.ToString();
+            string startStationCode = txtStartCity.SelectedValue.ToString();
             var lstFormStations = txtStartCity.ItemsSource as List<Stations>;
             string endStation = txtEndCity.Text.ToString();
+            string endStationCode = txtEndCity.SelectedValue.ToString();
             var lstToStations = txtEndCity.ItemsSource as List<Stations>;
 
             txtStartCity.Text = endStation;
@@ -531,9 +537,11 @@ namespace TrainAssistant
             txtStartCity.ItemsSource = lstToStations;
             txtStartCity.DisplayMemberPath = "ZHName";
             txtStartCity.SelectedValuePath = "Code";
+            txtStartCity.SelectedValue = endStationCode;
             txtEndCity.ItemsSource = lstFormStations;
             txtEndCity.DisplayMemberPath = "ZHName";
             txtEndCity.SelectedValuePath = "Code";
+            txtEndCity.SelectedValue = startStationCode;
         }
 
         //自动搜索
@@ -563,6 +571,8 @@ namespace TrainAssistant
                 lblStatusMsg.Content = "出发日期不能为空";
                 return;
             }
+            progressRingAnima.IsActive = true;
+            lblStatusMsg.Content = "查询中...";
             string isNormal = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
             Stations formStation = null;
             Stations toStation = null;
@@ -580,7 +590,8 @@ namespace TrainAssistant
             }
             string fromStationCode = formStation == null ? txtStartCity.SelectedValue.ToString() : formStation.Code;
             string toStationCode = toStation == null ? txtEndCity.SelectedValue.ToString() : toStation.Code;
-            progressRingAnima.IsActive = true;
+            txtStartCity.SelectedValue = fromStationCode;
+            txtEndCity.SelectedValue = toStationCode;
             List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, isNormal);
             gridTrainList.ItemsSource = ticketModel;
             lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
@@ -618,6 +629,7 @@ namespace TrainAssistant
             };
             ticketHelper.SaveFile("Query", jQuery.ToString());
             progressRingAnima.IsActive = false;
+            lblStatusMsg.Content = "查询完成";
         }
 
         //预订
@@ -629,6 +641,7 @@ namespace TrainAssistant
         //加载乘客
         private async Task GetContacts()
         {
+            lblStatusMsg.Content = "加载乘客中...";
             bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
             if (result)
             {
@@ -945,6 +958,19 @@ namespace TrainAssistant
         private async void gridTrainList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             await ReservateTicket();
+        }
+
+        //更多
+        private void chkMore_Click(object sender, RoutedEventArgs e)
+        {
+            if ((bool)chkMore.IsChecked)
+            {
+                bMoreQuery.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                bMoreQuery.Visibility = Visibility.Hidden;
+            }
         }
 
     }
