@@ -319,7 +319,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="110"/>
                                 </Grid.ColumnDefinitions>
-                                <Controls:ToggleSwitch Content="自动搜索" Width="135" HorizontalAlignment="Right" Grid.Column="0" Name="chkAutoSearch" Click="chkAutoSearch_Click" VerticalContentAlignment="Top" VerticalAlignment="Center"/>
+                                <Controls:ToggleSwitch Content="自动搜索" Width="135" HorizontalAlignment="Right" Grid.Column="0" Name="chkAutoSearch" Click="chkAutoSearch_Click" VerticalContentAlignment="Top"  />
                                 <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="1" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True"/>
                             </Grid>
                         </Border>

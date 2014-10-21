@@ -228,8 +228,8 @@ namespace TrainAssistant
                 string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
                 var lstQuerys = await ticketHelper.ReadQuerys("Query");
                 var query = (from q in lstQuerys
-                            where q.User == strUser
-                            select q).FirstOrDefault<Query>();
+                             where q.User == strUser
+                             select q).FirstOrDefault<Query>();
                 if (query != null)
                 {
                     txtStartCity.Text = query.FromName.ToString();
@@ -397,6 +397,87 @@ namespace TrainAssistant
         }
 
         /// <summary>
+        /// 查询
+        /// </summary>
+        /// <returns>返回可预订数</returns>
+        private async Task<Dictionary<int,int>> SearchTickets()
+        {
+            lblStatusMsg.Content = "查询中...";
+            string isNormal = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
+            Stations formStation = null;
+            Stations toStation = null;
+            if (txtStartCity.ItemsSource != null)
+            {
+                formStation = (from f in txtStartCity.ItemsSource as List<Stations>
+                               where f.ZHName == txtStartCity.Text.Trim()
+                               select f).FirstOrDefault<Stations>();
+            }
+            if (txtEndCity.ItemsSource != null)
+            {
+                toStation = (from t in txtEndCity.ItemsSource as List<Stations>
+                             where t.ZHName == txtEndCity.Text.Trim()
+                             select t).FirstOrDefault<Stations>();
+            }
+            string fromStationCode = formStation == null ? txtStartCity.SelectedValue.ToString() : formStation.Code;
+            string toStationCode = toStation == null ? txtEndCity.SelectedValue.ToString() : toStation.Code;
+            txtStartCity.SelectedValue = fromStationCode;
+            txtEndCity.SelectedValue = toStationCode;
+            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, isNormal);
+            int canBuy = 0;
+            if (ticketModel != null)
+            {
+                foreach (var t in ticketModel)
+                {
+                    if (t.IsCanBuy)
+                    {
+                        canBuy++;
+                    }
+                }
+                gridTrainList.ItemsSource = ticketModel;
+                lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
+            }
+            //保存查询条件
+            string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
+            var lstQuerys = await ticketHelper.ReadQuerys("Query");
+            var query = (from q in lstQuerys
+                         where q.User == strUser
+                         select q).FirstOrDefault<Query>();
+            if (query == null)
+            {
+                lstQuerys.Add(new Query() { User = strUser, FromName = txtStartCity.Text.Trim(), FromCode = fromStationCode, ToName = txtEndCity.Text.Trim(), ToCode = toStationCode, Date = txtDate.Text });
+            }
+            else
+            {
+                query.Date = txtDate.Text;
+                query.FromCode = fromStationCode;
+                query.FromName = txtStartCity.Text.Trim();
+                query.ToCode = toStationCode;
+                query.ToName = txtEndCity.Text.Trim();
+            }
+            JObject jQuery = new JObject()
+            {
+                new JProperty("querys",new JArray(
+                        from q in lstQuerys
+                        select  new JObject(
+                            new JProperty("user",q.User),
+                            new JProperty("fromStationName",q.FromName),
+                            new JProperty("formStationCode",q.FromCode),
+                            new JProperty("toStationName",q.ToName),
+                            new JProperty("toStationCode",q.ToCode),
+                            new JProperty("trainDate",q.Date)
+                        )
+                    ))
+            };
+            ticketHelper.SaveFile("Query", jQuery.ToString());
+            lblStatusMsg.Content = "查询完成";
+            Dictionary<int, int> dicCounts = new Dictionary<int, int>()
+            {
+                {canBuy,ticketModel.Count()}
+            };
+            return dicCounts;
+        }
+
+        /// <summary>
         /// 获取列车类型
         /// </summary>
         /// <returns></returns>
@@ -545,12 +626,42 @@ namespace TrainAssistant
         }
 
         //自动搜索
-        private void chkAutoSearch_Click(object sender, RoutedEventArgs e)
+        private async void chkAutoSearch_Click(object sender, RoutedEventArgs e)
         {
-            if (chkAutoSearch.IsChecked == true)
+            if (txtStartCity.Text.Trim() == "")
             {
-
+                lblStatusMsg.Content = "出发地不能为空";
+                return;
             }
+            if (txtEndCity.Text.Trim() == "")
+            {
+                lblStatusMsg.Content = "目的地不能为空";
+                return;
+            }
+            if (txtDate.Text.Trim() == "")
+            {
+                lblStatusMsg.Content = "出发日期不能为空";
+                return;
+            }
+            if ((bool)chkAutoSearch.IsChecked)
+            {
+                progressRingAnima.IsActive = true;
+                btnSearch.IsEnabled = false;
+                while (true)
+                {
+                    Dictionary<int,int> dicCounts = await SearchTickets();
+                    if (dicCounts.Keys.First() > 0 || dicCounts.Values.First()==0)
+                    {
+                        btnSearch.IsEnabled = true;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                btnSearch.IsEnabled = true;
+            }
+            progressRingAnima.IsActive = false;
         }
 
         //搜索
@@ -572,64 +683,8 @@ namespace TrainAssistant
                 return;
             }
             progressRingAnima.IsActive = true;
-            lblStatusMsg.Content = "查询中...";
-            string isNormal = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
-            Stations formStation = null;
-            Stations toStation = null;
-            if (txtStartCity.ItemsSource != null)
-            {
-                formStation = (from f in txtStartCity.ItemsSource as List<Stations>
-                               where f.ZHName == txtStartCity.Text.Trim()
-                               select f).FirstOrDefault<Stations>();
-            }
-            if (txtEndCity.ItemsSource != null)
-            {
-                toStation = (from t in txtEndCity.ItemsSource as List<Stations>
-                             where t.ZHName == txtEndCity.Text.Trim()
-                             select t).FirstOrDefault<Stations>();
-            }
-            string fromStationCode = formStation == null ? txtStartCity.SelectedValue.ToString() : formStation.Code;
-            string toStationCode = toStation == null ? txtEndCity.SelectedValue.ToString() : toStation.Code;
-            txtStartCity.SelectedValue = fromStationCode;
-            txtEndCity.SelectedValue = toStationCode;
-            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, isNormal);
-            gridTrainList.ItemsSource = ticketModel;
-            lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
-            //保存查询条件
-            string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
-            var lstQuerys = await ticketHelper.ReadQuerys("Query");
-            var query = (from q in lstQuerys
-                         where q.User == strUser
-                         select q).FirstOrDefault<Query>();
-            if (query == null)
-            {
-                lstQuerys.Add(new Query() { User = strUser, FromName = txtStartCity.Text.Trim(), FromCode = fromStationCode, ToName = txtEndCity.Text.Trim(), ToCode = toStationCode, Date = txtDate.Text });
-            }
-            else
-            {
-                query.Date = txtDate.Text;
-                query.FromCode = fromStationCode;
-                query.FromName = txtStartCity.Text.Trim();
-                query.ToCode = toStationCode;
-                query.ToName = txtEndCity.Text.Trim();
-            }
-            JObject jQuery = new JObject()
-            {
-                new JProperty("querys",new JArray(
-                        from q in lstQuerys
-                        select  new JObject(
-                            new JProperty("user",q.User),
-                            new JProperty("fromStationName",q.FromName),
-                            new JProperty("formStationCode",q.FromCode),
-                            new JProperty("toStationName",q.ToName),
-                            new JProperty("toStationCode",q.ToCode),
-                            new JProperty("trainDate",q.Date)
-                        )
-                    ))
-            };
-            ticketHelper.SaveFile("Query", jQuery.ToString());
+            await SearchTickets();
             progressRingAnima.IsActive = false;
-            lblStatusMsg.Content = "查询完成";
         }
 
         //预订
