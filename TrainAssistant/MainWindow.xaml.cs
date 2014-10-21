@@ -652,7 +652,9 @@ namespace TrainAssistant
                     Dictionary<int,int> dicCounts = await SearchTickets();
                     if (dicCounts.Keys.First() > 0 || dicCounts.Values.First()==0)
                     {
+                        chkAutoSearch.IsChecked = false;
                         btnSearch.IsEnabled = true;
+                        progressRingAnima.IsActive = false;
                         break;
                     }
                 }
@@ -661,7 +663,6 @@ namespace TrainAssistant
             {
                 btnSearch.IsEnabled = true;
             }
-            progressRingAnima.IsActive = false;
         }
 
         //搜索
