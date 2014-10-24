@@ -201,14 +201,14 @@ namespace TrainAssistant
             btnLogin.IsEnabled = false;
             try
             {
-                string loginCodeResult = await ticketHelper.ValidateLoginCode(txtValidateCode.Text.Trim());
-                if (loginCodeResult.Contains("验证码错误"))
-                {
-                    lblErrorMsg.Content = loginCodeResult;
-                    btnLogin.IsEnabled = true;
-                    progressRingAnima.IsActive = false;
-                    return;
-                }
+                //string loginCodeResult = await ticketHelper.ValidateLoginCode(txtValidateCode.Text.Trim());
+                //if (loginCodeResult.Contains("验证码错误"))
+                //{
+                //    lblErrorMsg.Content = loginCodeResult;
+                //    btnLogin.IsEnabled = true;
+                //    progressRingAnima.IsActive = false;
+                //    return;
+                //}
                 lblErrorMsg.Content = await ticketHelper.Login(txtUserName.Text.Trim(), txtPassword.Password.Trim(), txtValidateCode.Text.Trim(), (bool)chkRemeberMe.IsChecked, (bool)chkAutoLogin.IsChecked);
             }
             catch (Exception)
@@ -423,18 +423,74 @@ namespace TrainAssistant
             txtStartCity.SelectedValue = fromStationCode;
             txtEndCity.SelectedValue = toStationCode;
             List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, isNormal);
-            int canBuy = 0;
+            List<Tickets> lstCanReservateTickets = new List<Tickets>();
             if (ticketModel != null)
             {
                 foreach (var t in ticketModel)
                 {
                     if (t.IsCanBuy)
                     {
-                        canBuy++;
+                        lstCanReservateTickets.Add(new Tickets()
+                        {
+                            ArriveTime = t.ArriveTime,
+                            ControlDay = t.ControlDay,
+                            ControlTrainDay=t.ControlTrainDay,
+                            DayDifference=t.DayDifference,
+                            EndStationCode=t.EndStationCode,
+                            EndStationName=t.EndStationName,
+                            From=t.From,
+                            FromStationCode=t.FromStationCode,
+                            FromStationName=t.FromStationName,
+                            FromStationNo=t.FromStationNo,
+                            GGNum=t.GGNum,
+                            GRNum=t.GRNum,
+                            IsCanBuy=t.IsCanBuy,
+                            IsSupportCard=t.IsSupportCard,
+                            LiShi=t.LiShi,
+                            LiShiDay=t.LiShiDay,
+                            LiShiValue=t.LiShiValue,
+                            LocationCode=t.LocationCode,
+                            QTNum=t.QTNum,
+                            RWNum=t.RWNum,
+                            RZNum=t.RZNum,
+                            SaleTime=t.SaleTime,
+                            SeatFeature=t.SeatFeature,
+                            SeatTypes=t.SeatTypes,
+                            SecretStr=t.SecretStr,
+                            StartStationCode=t.StartStationCode,
+                            StartStationName=t.StartStationName,
+                            StartTime=t.StartTime,
+                            StartTrainDate=t.StartTrainDate,
+                            SWZNum=t.SWZNum,
+                            To=t.To,
+                            ToStationCode=t.ToStationCode,
+                            ToStationName=t.ToStationName,
+                            ToStationNo=t.ToStationNo,
+                            TrainClassName=t.TrainClassName,
+                            TrainName=t.TrainName,
+                            TrainNo=t.TrainNo,
+                            TrainSeatFeature=t.TrainSeatFeature,
+                            TZNum=t.TZNum,
+                            WZNum=t.WZNum,
+                            YBNum=t.YBNum,
+                            YPEx=t.YPEx,
+                            YPInfo=t.YPInfo,
+                            YWNum=t.YWNum,
+                            YZNum=t.YZNum,
+                            ZENum=t.ZENum,
+                            ZYNum=t.ZYNum
+                        });
                     }
                 }
-                gridTrainList.ItemsSource = ticketModel;
-                lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟列车）";
+                if ((bool)chkCanReservate.IsChecked)
+                {
+                    gridTrainList.ItemsSource = lstCanReservateTickets;
+                }
+                else
+                {
+                    gridTrainList.ItemsSource = ticketModel;
+                }
+                lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟，【可预订" + lstCanReservateTickets .Count()+ "趟】）";
             }
             //保存查询条件
             string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
@@ -472,7 +528,7 @@ namespace TrainAssistant
             lblStatusMsg.Content = "查询完成";
             Dictionary<int, int> dicCounts = new Dictionary<int, int>()
             {
-                {canBuy,ticketModel.Count()}
+                {lstCanReservateTickets.Count(),ticketModel.Count()}
             };
             return dicCounts;
         }
@@ -1014,19 +1070,6 @@ namespace TrainAssistant
         private async void gridTrainList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             await ReservateTicket();
-        }
-
-        //更多
-        private void chkMore_Click(object sender, RoutedEventArgs e)
-        {
-            if ((bool)chkMore.IsChecked)
-            {
-                bMoreQuery.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                bMoreQuery.Visibility = Visibility.Hidden;
-            }
         }
 
     }

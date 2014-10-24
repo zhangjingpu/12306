@@ -265,54 +265,38 @@
                                 <RadioButton Content="学生" Tag="0X00" Grid.Column="2" Height="17" Name="rdoStudent" GroupName="rdoPurpose" IsEnabled="False"/>
                             </Grid>
                         </Border>
-                        <Border Name="bMoreQuery" Grid.Row="1" Grid.ColumnSpan="5" Grid.RowSpan="2" Visibility="Hidden">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                </Grid.RowDefinitions>
+                        <Label Grid.Row="1" Content="车次(_T)：" HorizontalAlignment="Right" VerticalContentAlignment="Center" Target="{Binding ElementName=txtTrainNo}"/>
+                        <TextBox Grid.Column="1" Grid.Row="1" Height="27" Controls:TextboxHelper.Watermark="输入车次" Name="txtTrainNo"/>
+                        <Label Grid.Column="2" Grid.Row="1" Content="时间：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+                        <ComboBox Grid.Column="3" Grid.Row="1" Name="selTime" Height="27" SelectedIndex="0">
+                            <ComboBoxItem>00:00--24:00</ComboBoxItem>
+                            <ComboBoxItem>00:00--06:00</ComboBoxItem>
+                            <ComboBoxItem>06:00--12:00</ComboBoxItem>
+                            <ComboBoxItem>12:00--18:00</ComboBoxItem>
+                            <ComboBoxItem>18:00--24:00</ComboBoxItem>
+                        </ComboBox>
+                        <CheckBox Grid.Column="4" Grid.Row="1" Content="可预订" Height="15" Name="chkCanReservate" HorizontalAlignment="Right" Width="60" />
+                        <Label Content="车次类型：" Grid.Row="2" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+                        <Border Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="4">
+                            <Grid Name="gridTicketType">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="1.*"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="1.*"/>
-                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
-                                <Label Grid.Column="0" Content="车次(_T)：" HorizontalAlignment="Right" VerticalContentAlignment="Center" Target="{Binding ElementName=txtTrainNo}"/>
-                                <TextBox Grid.Column="1" Height="27" Controls:TextboxHelper.Watermark="输入车次" Name="txtTrainNo"/>
-                                <Label Grid.Column="2" Content="时间：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
-                                <ComboBox Grid.Column="3" Name="selTime" Height="27" SelectedIndex="0">
-                                    <ComboBoxItem>00:00--24:00</ComboBoxItem>
-                                    <ComboBoxItem>00:00--06:00</ComboBoxItem>
-                                    <ComboBoxItem>06:00--12:00</ComboBoxItem>
-                                    <ComboBoxItem>12:00--18:00</ComboBoxItem>
-                                    <ComboBoxItem>18:00--24:00</ComboBoxItem>
-                                </ComboBox>
-                                <CheckBox Grid.Column="4" Content="可预订" Height="15" HorizontalAlignment="Right" Width="60" />
-                                <Label Content="车次类型：" Grid.Row="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
-                                <Border Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="4">
-                                    <Grid Name="gridTicketType">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="60"/>
-                                        </Grid.ColumnDefinitions>
-                                        <CheckBox Grid.Column="0" Name="chkAll" Content="全部" Tag="QB" Height="15" Click="chkAll_Click" />
-                                        <CheckBox Grid.Column="1" Name="chkHSR" Content="高铁" Tag="D" Height="15" Click="chkHSR_Click"/>
-                                        <CheckBox Grid.Column="2" Name="chkEMU" Content="动车" Tag="D" Height="15" Click="chkEMU_Click" />
-                                        <CheckBox Grid.Column="3" Name="chkZ" Content="Z-直达" Tag="Z" Height="15" Click="chkZ_Click" />
-                                        <CheckBox Grid.Column="4" Name="chkT" Content="T-特快" Tag="T" Height="15" Click="chkT_Click" />
-                                        <CheckBox Grid.Column="5" Name="chkK" Content="K-快速" Tag="K" Height="15" Click="chkK_Click" />
-                                        <CheckBox Grid.Column="6" Name="chkOther" Content="其他" Tag="QT" Height="15" Click="chkOther_Click" />
-                                    </Grid>
-                                </Border>
+                                <CheckBox Grid.Column="0" Name="chkAll" Content="全部" Tag="QB" Height="15" Click="chkAll_Click" />
+                                <CheckBox Grid.Column="1" Name="chkHSR" Content="高铁" Tag="D" Height="15" Click="chkHSR_Click"/>
+                                <CheckBox Grid.Column="2" Name="chkEMU" Content="动车" Tag="D" Height="15" Click="chkEMU_Click" />
+                                <CheckBox Grid.Column="3" Name="chkZ" Content="Z-直达" Tag="Z" Height="15" Click="chkZ_Click" />
+                                <CheckBox Grid.Column="4" Name="chkT" Content="T-特快" Tag="T" Height="15" Click="chkT_Click" />
+                                <CheckBox Grid.Column="5" Name="chkK" Content="K-快速" Tag="K" Height="15" Click="chkK_Click" />
+                                <CheckBox Grid.Column="6" Name="chkOther" Content="其他" Tag="QT" Height="15" Click="chkOther_Click" />
                             </Grid>
                         </Border>
-                        <CheckBox Grid.Row="1" Grid.Column="7" Content="更多" Name="chkMore" Height="15" Width="60" HorizontalAlignment="Right" Click="chkMore_Click" />
                         <Border Grid.Column="5" Grid.Row="2" Grid.ColumnSpan="3">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -390,7 +374,7 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="215"/>
                     <ColumnDefinition Width="440"/>
                 </Grid.ColumnDefinitions>
                 <Label Name="lblStatusMsg" Height="27" Grid.Column="0" Content="程序初始化..." />
