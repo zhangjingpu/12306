@@ -423,14 +423,18 @@ namespace TrainAssistant
             txtStartCity.SelectedValue = fromStationCode;
             txtEndCity.SelectedValue = toStationCode;
             List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, isNormal);
-            List<Tickets> lstCanReservateTickets = new List<Tickets>();
+            List<Tickets> lstTickets = new List<Tickets>();
+            string selTime = cboTrainTime.Text;
+            int startTime = Convert.ToInt32(selTime.Substring(0, 2));
+            int endTime = Convert.ToInt32(selTime.Substring(selTime.LastIndexOf('-') + 1,2));
             if (ticketModel != null)
             {
                 foreach (var t in ticketModel)
                 {
+                    //可预订
                     if (t.IsCanBuy)
                     {
-                        lstCanReservateTickets.Add(new Tickets()
+                        lstTickets.Add(new Tickets()
                         {
                             ArriveTime = t.ArriveTime,
                             ControlDay = t.ControlDay,
@@ -481,16 +485,17 @@ namespace TrainAssistant
                             ZYNum=t.ZYNum
                         });
                     }
+                    
                 }
                 if ((bool)chkCanReservate.IsChecked)
                 {
-                    gridTrainList.ItemsSource = lstCanReservateTickets;
+                    gridTrainList.ItemsSource = lstTickets;
                 }
                 else
                 {
                     gridTrainList.ItemsSource = ticketModel;
                 }
-                lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟，【可预订" + lstCanReservateTickets .Count()+ "趟】）";
+                lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟，【可预订" + lstTickets.Count() + "趟】）";
             }
             //保存查询条件
             string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
@@ -528,7 +533,7 @@ namespace TrainAssistant
             lblStatusMsg.Content = "查询完成";
             Dictionary<int, int> dicCounts = new Dictionary<int, int>()
             {
-                {lstCanReservateTickets.Count(),ticketModel.Count()}
+                {lstTickets.Count(),ticketModel.Count()}
             };
             return dicCounts;
         }
