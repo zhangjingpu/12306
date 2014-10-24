@@ -275,7 +275,7 @@
                             <ComboBoxItem>12:00--18:00</ComboBoxItem>
                             <ComboBoxItem>18:00--24:00</ComboBoxItem>
                         </ComboBox>
-                        <CheckBox Grid.Column="4" Grid.Row="1" Content="可预订" Height="15" Name="chkCanReservate" HorizontalAlignment="Right" Width="60" />
+                        <CheckBox Grid.Column="4" Grid.Row="1" Content="可预订" Height="15" Name="chkCanReservate" Click="chkCanReservate_Click" HorizontalAlignment="Right" Width="60" />
                         <Label Content="车次类型：" Grid.Row="2" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
                         <Border Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="4">
                             <Grid Name="gridTicketType">
@@ -374,7 +374,7 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="215"/>
+                    <ColumnDefinition Width="230"/>
                     <ColumnDefinition Width="440"/>
                 </Grid.ColumnDefinitions>
                 <Label Name="lblStatusMsg" Height="27" Grid.Column="0" Content="程序初始化..." />

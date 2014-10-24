@@ -1072,5 +1072,13 @@ namespace TrainAssistant
             await ReservateTicket();
         }
 
+        //可预订
+        private async void chkCanReservate_Click(object sender, RoutedEventArgs e)
+        {
+            //progressRingAnima.IsActive = true;
+            //await SearchTickets();
+            //progressRingAnima.IsActive = false;
+        }
+
     }
 }
