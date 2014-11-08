@@ -29,7 +29,7 @@ namespace TrainAssistant
         TicketHelper ticketHelper = new TicketHelper();
         public const string accountFile = "Account";//登录用户信息
         string seatTypes = "";//席别
-
+        private const string purposeCode = "ADULT";
         public MainWindow()
         {
             InitializeComponent();
@@ -376,7 +376,6 @@ namespace TrainAssistant
                     }
                     lblTicket.Content = tickets.FromStationName + "→" + tickets.ToStationName + "(" + tickets.TrainName + ")";
                     lblTicket.Tag = tickets.StartTrainDate + "," + tickets.TrainNo + "," + tickets.TrainName + "," + tickets.FromStationCode + "," + tickets.ToStationCode + "," + tickets.YPInfo + "," + tickets.LocationCode;
-                    string purposeCode = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
                     Dictionary<bool, string> dicSubmitOrderReq = await ticketHelper.SubmitOrderRequest(tickets, purposeCode);
                     if (!dicSubmitOrderReq.Keys.First())
                     {
@@ -403,7 +402,6 @@ namespace TrainAssistant
         private async Task<Dictionary<int,int>> SearchTickets()
         {
             lblStatusMsg.Content = "查询中...";
-            string isNormal = rdoNormal.IsChecked == true ? rdoNormal.Tag.ToString() : rdoStudent.Tag.ToString();
             Stations formStation = null;
             Stations toStation = null;
             if (txtStartCity.ItemsSource != null)
@@ -422,7 +420,7 @@ namespace TrainAssistant
             string toStationCode = toStation == null ? txtEndCity.SelectedValue.ToString() : toStation.Code;
             txtStartCity.SelectedValue = fromStationCode;
             txtEndCity.SelectedValue = toStationCode;
-            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, isNormal);
+            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, purposeCode);
             List<Tickets> lstTickets = new List<Tickets>();
             string selTime = cboTrainTime.Text;
             int startTime = Convert.ToInt32(selTime.Substring(0, 2));

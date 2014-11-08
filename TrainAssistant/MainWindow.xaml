@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        Title="12306助手v1.0 Beta" Height="550" Width="970" ShowTitleBar="True"  ShowIconOnTitleBar="True" MinWidth="570" MinHeight="350" Loaded="MetroWindow_Loaded">
+        Title="12306助手v1.0 Beta" Height="550" Width="1000" ShowTitleBar="True"  ShowIconOnTitleBar="True" MinWidth="590" MinHeight="350" Loaded="MetroWindow_Loaded">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -242,7 +242,7 @@
                         </Border>
                         <ComboBox Height="27" Name="txtEndCity" Controls:TextboxHelper.Watermark="输入到达站" Grid.Column="3" Grid.Row="0" IsEditable="True" StaysOpenOnEdit="True" IsTextSearchEnabled="True" KeyUp="txtEndCity_KeyUp" />
                         <Label Content="乘车日期(_D)：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="0" Grid.Column="4" Target="{Binding ElementName=txtDate}" />
-                        <Border Grid.Column="5" Grid.ColumnSpan="2">
+                        <Border Grid.Column="5">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
@@ -254,30 +254,16 @@
                                 <Button Content="+" Grid.Column="2" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnNextDate" Click="btnNextDate_Click" />
                             </Grid>
                         </Border>
-                        <Border Grid.Column="7">
-                            <Grid Name="gridPurposeType">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="60"/>
-                                    <ColumnDefinition Width="60"/>
-                                </Grid.ColumnDefinitions>
-                                <RadioButton Content="普通" Tag="ADULT" Grid.Column="1" Height="17" Name="rdoNormal" IsChecked="True" GroupName="rdoPurpose"/>
-                                <RadioButton Content="学生" Tag="0X00" Grid.Column="2" Height="17" Name="rdoStudent" GroupName="rdoPurpose" IsEnabled="False"/>
-                            </Grid>
-                        </Border>
-                        <Label Grid.Row="1" Content="车次(_T)：" HorizontalAlignment="Right" VerticalContentAlignment="Center" Target="{Binding ElementName=txtTrainNo}"/>
-                        <TextBox Grid.Column="1" Grid.Row="1" Height="27" Controls:TextboxHelper.Watermark="输入车次" Name="txtTrainNo"/>
-                        <Label Grid.Column="2" Grid.Row="1" Content="时间：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
-                        <ComboBox Grid.Column="3" Grid.Row="1" Height="27" SelectedIndex="0" Name="cboTrainTime">
+                        <Label Grid.Column="6" Content="时间：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+                        <ComboBox Grid.Column="7" Height="27" SelectedIndex="0" Name="cboTrainTime">
                             <ComboBoxItem>00:00--24:00</ComboBoxItem>
                             <ComboBoxItem>00:00--06:00</ComboBoxItem>
                             <ComboBoxItem>06:00--12:00</ComboBoxItem>
                             <ComboBoxItem>12:00--18:00</ComboBoxItem>
                             <ComboBoxItem>18:00--24:00</ComboBoxItem>
                         </ComboBox>
-                        <CheckBox Grid.Column="4" Grid.Row="1" Content="可预订" Height="15" Name="chkCanReservate" Click="chkCanReservate_Click" HorizontalAlignment="Right" Width="60" />
-                        <Label Content="车次类型：" Grid.Row="2" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
-                        <Border Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="4">
+                        <Label Content="车次类型：" Grid.Row="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+                        <Border Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="4">
                             <Grid Name="gridTicketType">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="60"/>
@@ -297,16 +283,19 @@
                                 <CheckBox Grid.Column="6" Name="chkOther" Content="其他" Tag="QT" Height="15" Click="chkOther_Click" />
                             </Grid>
                         </Border>
-                        <Border Grid.Column="5" Grid.Row="2" Grid.ColumnSpan="3">
+                        <Border Grid.Column="5" Grid.Row="1" Grid.ColumnSpan="3">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="75"/>
                                     <ColumnDefinition Width="110"/>
                                 </Grid.ColumnDefinitions>
-                                <Controls:ToggleSwitch Content="自动搜索" Width="135" HorizontalAlignment="Right" Grid.Column="0" Name="chkAutoSearch" Click="chkAutoSearch_Click" VerticalContentAlignment="Top"  />
-                                <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="1" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True"/>
+                                <CheckBox Content="可预订" Height="15" Name="chkCanReservate" Click="chkCanReservate_Click" HorizontalAlignment="Right" Width="55" />
+                                <CheckBox Content="自动搜索" HorizontalAlignment="Right" Grid.Column="1" Name="chkAutoSearch" Click="chkAutoSearch_Click" Height="15" />
+                                <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="2" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True"/>
                             </Grid>
                         </Border>
+                        <Controls:ToggleSwitch Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="2" Content="自动提交订单" Width="170" HorizontalAlignment="Right"/>
                         <DataGrid Grid.Row="5" Grid.ColumnSpan="8" Name="gridTrainList" AutoGenerateColumns="False" Margin="0,5,0,0" IsReadOnly="True" MouseDoubleClick="gridTrainList_MouseDoubleClick" SelectionMode="Single">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="车次" Width="110" Binding="{Binding Path=TrainName}" />
