@@ -254,7 +254,7 @@
                                 <Button Content="+" Grid.Column="2" Style="{DynamicResource SquareButtonStyle}" Height="27" Name="btnNextDate" Click="btnNextDate_Click" />
                             </Grid>
                         </Border>
-                        <Label Grid.Column="6" Content="时间：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+                        <Label Grid.Column="6" Content="发车时间：" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
                         <ComboBox Grid.Column="7" Height="27" SelectedIndex="0" Name="cboTrainTime">
                             <ComboBoxItem>00:00--24:00</ComboBoxItem>
                             <ComboBoxItem>00:00--06:00</ComboBoxItem>
@@ -274,13 +274,13 @@
                                     <ColumnDefinition Width="60"/>
                                     <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
-                                <CheckBox Grid.Column="0" Name="chkAll" Content="全部" Tag="QB" Height="15" Click="chkAll_Click" />
-                                <CheckBox Grid.Column="1" Name="chkHSR" Content="高铁" Tag="D" Height="15" Click="chkHSR_Click"/>
-                                <CheckBox Grid.Column="2" Name="chkEMU" Content="动车" Tag="D" Height="15" Click="chkEMU_Click" />
-                                <CheckBox Grid.Column="3" Name="chkZ" Content="Z-直达" Tag="Z" Height="15" Click="chkZ_Click" />
-                                <CheckBox Grid.Column="4" Name="chkT" Content="T-特快" Tag="T" Height="15" Click="chkT_Click" />
-                                <CheckBox Grid.Column="5" Name="chkK" Content="K-快速" Tag="K" Height="15" Click="chkK_Click" />
-                                <CheckBox Grid.Column="6" Name="chkOther" Content="其他" Tag="QT" Height="15" Click="chkOther_Click" />
+                                <CheckBox Grid.Column="0" Name="chkAll" Content="全部" Tag="QB" Height="15" Click="chkAll_Click" IsChecked="True" />
+                                <CheckBox Grid.Column="1" Name="chkHSR" Content="高铁" Tag="G" Height="15" Click="chkHSR_Click" IsChecked="True" />
+                                <CheckBox Grid.Column="2" Name="chkEMU" Content="动车" Tag="D" Height="15" Click="chkEMU_Click" IsChecked="True" />
+                                <CheckBox Grid.Column="3" Name="chkZ" Content="Z-直达" Tag="Z" Height="15" Click="chkZ_Click" IsChecked="True" />
+                                <CheckBox Grid.Column="4" Name="chkT" Content="T-特快" Tag="T" Height="15" Click="chkT_Click" IsChecked="True" />
+                                <CheckBox Grid.Column="5" Name="chkK" Content="K-快速" Tag="K" Height="15" Click="chkK_Click" IsChecked="True" />
+                                <CheckBox Grid.Column="6" Name="chkOther" Content="其他" Tag="QT" Height="15" Click="chkOther_Click" IsChecked="True" />
                             </Grid>
                         </Border>
                         <Border Grid.Column="5" Grid.Row="1" Grid.ColumnSpan="3">
@@ -292,7 +292,7 @@
                                 </Grid.ColumnDefinitions>
                                 <CheckBox Content="可预订" Height="15" Name="chkCanReservate" Click="chkCanReservate_Click" HorizontalAlignment="Right" Width="55" />
                                 <CheckBox Content="自动搜索" HorizontalAlignment="Right" Grid.Column="1" Name="chkAutoSearch" Click="chkAutoSearch_Click" Height="15" />
-                                <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="2" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True"/>
+                                <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="2" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True" />
                             </Grid>
                         </Border>
                         <Controls:ToggleSwitch Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="2" Content="自动提交订单" Width="170" HorizontalAlignment="Right"/>

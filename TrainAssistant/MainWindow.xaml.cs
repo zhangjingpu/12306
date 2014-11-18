@@ -399,7 +399,7 @@ namespace TrainAssistant
         /// 查询
         /// </summary>
         /// <returns>返回可预订数</returns>
-        private async Task<Dictionary<int,int>> SearchTickets()
+        private async Task<int> SearchTickets()
         {
             lblStatusMsg.Content = "查询中...";
             Stations formStation = null;
@@ -420,80 +420,24 @@ namespace TrainAssistant
             string toStationCode = toStation == null ? txtEndCity.SelectedValue.ToString() : toStation.Code;
             txtStartCity.SelectedValue = fromStationCode;
             txtEndCity.SelectedValue = toStationCode;
-            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, purposeCode);
-            List<Tickets> lstTickets = new List<Tickets>();
-            string selTime = cboTrainTime.Text;
-            int startTime = Convert.ToInt32(selTime.Substring(0, 2));
-            int endTime = Convert.ToInt32(selTime.Substring(selTime.LastIndexOf('-') + 1,2));
+            string chkTickTypes = "";
+            foreach (var chk in gridTicketType.Children)
+            {
+                if (chk is CheckBox)
+                {
+                    CheckBox chkItem = chk as CheckBox;
+                    if ((bool)chkItem.IsChecked)
+                    {
+                        chkTickTypes += chkItem.Tag + ",";
+                    }
+                }
+            }
+            chkTickTypes = chkTickTypes.IndexOf("QB") > -1 || chkTickTypes == "" ? "QB" : chkTickTypes;
+            List<Tickets> ticketModel = await ticketHelper.GetSearchTrain(txtDate.Text.Replace('/', '-'), fromStationCode, toStationCode, purposeCode, cboTrainTime.Text, chkTickTypes, (bool)chkCanReservate.IsChecked);
             if (ticketModel != null)
             {
-                foreach (var t in ticketModel)
-                {
-                    //可预订
-                    if (t.IsCanBuy)
-                    {
-                        lstTickets.Add(new Tickets()
-                        {
-                            ArriveTime = t.ArriveTime,
-                            ControlDay = t.ControlDay,
-                            ControlTrainDay=t.ControlTrainDay,
-                            DayDifference=t.DayDifference,
-                            EndStationCode=t.EndStationCode,
-                            EndStationName=t.EndStationName,
-                            From=t.From,
-                            FromStationCode=t.FromStationCode,
-                            FromStationName=t.FromStationName,
-                            FromStationNo=t.FromStationNo,
-                            GGNum=t.GGNum,
-                            GRNum=t.GRNum,
-                            IsCanBuy=t.IsCanBuy,
-                            IsSupportCard=t.IsSupportCard,
-                            LiShi=t.LiShi,
-                            LiShiDay=t.LiShiDay,
-                            LiShiValue=t.LiShiValue,
-                            LocationCode=t.LocationCode,
-                            QTNum=t.QTNum,
-                            RWNum=t.RWNum,
-                            RZNum=t.RZNum,
-                            SaleTime=t.SaleTime,
-                            SeatFeature=t.SeatFeature,
-                            SeatTypes=t.SeatTypes,
-                            SecretStr=t.SecretStr,
-                            StartStationCode=t.StartStationCode,
-                            StartStationName=t.StartStationName,
-                            StartTime=t.StartTime,
-                            StartTrainDate=t.StartTrainDate,
-                            SWZNum=t.SWZNum,
-                            To=t.To,
-                            ToStationCode=t.ToStationCode,
-                            ToStationName=t.ToStationName,
-                            ToStationNo=t.ToStationNo,
-                            TrainClassName=t.TrainClassName,
-                            TrainName=t.TrainName,
-                            TrainNo=t.TrainNo,
-                            TrainSeatFeature=t.TrainSeatFeature,
-                            TZNum=t.TZNum,
-                            WZNum=t.WZNum,
-                            YBNum=t.YBNum,
-                            YPEx=t.YPEx,
-                            YPInfo=t.YPInfo,
-                            YWNum=t.YWNum,
-                            YZNum=t.YZNum,
-                            ZENum=t.ZENum,
-                            ZYNum=t.ZYNum
-                        });
-                    }
-                    
-                }
-                if ((bool)chkCanReservate.IsChecked)
-                {
-                    gridTrainList.ItemsSource = lstTickets;
-                }
-                else
-                {
-                    gridTrainList.ItemsSource = ticketModel;
-                }
-                lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟，【可预订" + lstTickets.Count() + "趟】）";
+                gridTrainList.ItemsSource = ticketModel;
+                lblTicketCount.Content = txtStartCity.Text + "→" + txtEndCity.Text + "（共" + ticketModel.Count() + "趟）";
             }
             //保存查询条件
             string strUser = lblLoginName.Text.Substring(lblLoginName.Text.IndexOf('，') + 1);
@@ -529,11 +473,7 @@ namespace TrainAssistant
             };
             ticketHelper.SaveFile("Query", jQuery.ToString());
             lblStatusMsg.Content = "查询完成";
-            Dictionary<int, int> dicCounts = new Dictionary<int, int>()
-            {
-                {lstTickets.Count(),ticketModel.Count()}
-            };
-            return dicCounts;
+            return ticketModel.Count();
         }
 
         /// <summary>
@@ -706,17 +646,17 @@ namespace TrainAssistant
             {
                 progressRingAnima.IsActive = true;
                 btnSearch.IsEnabled = false;
-                while (true)
-                {
-                    Dictionary<int,int> dicCounts = await SearchTickets();
-                    if (dicCounts.Keys.First() > 0 || dicCounts.Values.First()==0)
-                    {
-                        chkAutoSearch.IsChecked = false;
-                        btnSearch.IsEnabled = true;
-                        progressRingAnima.IsActive = false;
-                        break;
-                    }
-                }
+                //while (true)
+                //{
+                //    Dictionary<int,int> dicCounts = await SearchTickets();
+                //    if (dicCounts.Keys.First() > 0 || dicCounts.Values.First()==0)
+                //    {
+                //        chkAutoSearch.IsChecked = false;
+                //        btnSearch.IsEnabled = true;
+                //        progressRingAnima.IsActive = false;
+                //        break;
+                //    }
+                //}
             }
             else
             {
