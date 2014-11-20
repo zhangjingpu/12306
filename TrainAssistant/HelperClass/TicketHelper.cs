@@ -77,7 +77,7 @@ namespace JasonLong.Helper
                         {
                             JObject jsonQuery = JObject.Parse(strQuery);
                             var jsonQueryData = (from q in jsonQuery["querys"]
-                                                select new { user=q["user"],fromName = q["fromStationName"], fromCode = q["formStationCode"], toName = q["toStationName"], toCode = q["toStationCode"], date = q["trainDate"] }).ToList();
+                                                 select new { user = q["user"], fromName = q["fromStationName"], fromCode = q["formStationCode"], toName = q["toStationName"], toCode = q["toStationCode"], date = q["trainDate"] }).ToList();
                             if (jsonQueryData.Count > 0)
                             {
                                 foreach (var q in jsonQueryData)
@@ -113,7 +113,7 @@ namespace JasonLong.Helper
         /// <summary>
         /// 获取登录验证码图片并识别
         /// </summary>
-        public Task<Dictionary<BitmapImage,string>> GetLoginCodeAsync()
+        public Task<Dictionary<BitmapImage, string>> GetLoginCodeAsync()
         {
             return Task.Factory.StartNew(() =>
             {
@@ -315,7 +315,7 @@ namespace JasonLong.Helper
         /// <param name="tostation">目的地</param>
         /// <param name="purposecode">是否为普通票</param>
         /// <returns></returns>
-        public Task<List<Tickets>> GetSearchTrain(string date, string fromstation, string tostation, string purposecode,string time,string tickTypes,bool isCanBuy)
+        public Task<List<Tickets>> GetSearchTrain(string date, string fromstation, string tostation, string purposecode, string time, string tickTypes, bool isCanBuy)
         {
             return Task.Factory.StartNew(() =>
             {
@@ -380,75 +380,142 @@ namespace JasonLong.Helper
                     if (list.Count > 0)
                     {
                         //时间
-                        int startTime = Convert.ToInt32(time.Substring(0, 2));
-                        int endTime = Convert.ToInt32(time.Substring(time.LastIndexOf('-') + 1, 2));
-
+                        int startTime = Convert.ToInt32(time.Substring(0, 5).Replace(":",""));
+                        int endTime = Convert.ToInt32(time.Substring(time.LastIndexOf('-') + 1).Replace(":", ""));
                         foreach (var t in list)
                         {
                             string tickCode = t.stationtraincode.ToString();
                             tickCode = tickCode.Substring(0, 1);
-                            if (GetTickType(tickTypes, tickCode))
+                            int tickTime = Convert.ToInt32(t.starttime.ToString().Replace(":", ""));
+                            bool IsCanBuytick=t.canWebBuy.ToString() == "Y" ? true : false;
+                            if (tickTime >= startTime && tickTime <= endTime)
                             {
-                                ticks.Add(new Tickets()
+                                if (GetTickType(tickTypes, tickCode))
                                 {
-                                    TrainNo = t.trainno.ToString(),
-                                    TrainName = t.stationtraincode.ToString(),
-                                    StartStationCode = t.startstationtelecode.ToString(),
-                                    StartStationName = t.startstationname.ToString(),
-                                    EndStationCode = t.endstationtelecode.ToString(),
-                                    EndStationName = t.endstationname.ToString(),
-                                    FromStationCode = t.fromstationtelecode.ToString(),
-                                    FromStationName = t.fromstationname.ToString(),
-                                    ToStationCode = t.tostationtelecode.ToString(),
-                                    ToStationName = t.tostationname.ToString(),
-                                    StartTime = t.starttime.ToString(),
-                                    ArriveTime = t.arrivetime.ToString(),
-                                    From = t.fromstationname.ToString() + "（" + t.starttime.ToString() + "）",
-                                    To = t.tostationname.ToString() + "（" + t.arrivetime.ToString() + "）",
-                                    DayDifference = t.daydifference.ToString(),
-                                    TrainClassName = t.trainclassname.ToString(),
-                                    LiShi = t.lishi.ToString(),
-                                    LiShiDay = t.daydifference.ToString() == "0" ? t.lishi.ToString() + "（当日到达）" :
-                                            t.daydifference.ToString() == "1" ? t.lishi.ToString() + "（次日到达）" :
-                                            t.daydifference.ToString() == "2" ? t.lishi.ToString() + "（两天内到达）" :
-                                            t.daydifference.ToString() == "3" ? t.lishi.ToString() + "（三天内到达）" :
-                                            t.daydifference.ToString() == "4" ? t.lishi.ToString() + "（四天内到达）" :
-                                            t.daydifference.ToString() == "5" ? t.lishi.ToString() + "（五天内到达）" :
-                                            t.daydifference.ToString() == "6" ? t.lishi.ToString() + "（六天内到达）" :
-                                            t.daydifference.ToString() == "7" ? t.lishi.ToString() + "（七天内到达）" :
-                                            t.lishi.ToString(),
-                                    IsCanBuy = t.canWebBuy.ToString() == "Y" ? true : false,
-                                    LiShiValue = t.lishiValue.ToString(),
-                                    YPInfo = t.ypinfo.ToString(),
-                                    ControlTrainDay = t.controltrainday.ToString(),
-                                    StartTrainDate = t.starttraindate.ToString().Substring(0, 4) + "-" + t.starttraindate.ToString().Substring(4, 2) + "-" + t.starttraindate.ToString().Substring(6, 2),
-                                    SeatFeature = t.seatfeature.ToString(),
-                                    YPEx = t.ypex.ToString(),
-                                    TrainSeatFeature = t.trainseatfeature.ToString(),
-                                    SeatTypes = t.seattypes.ToString(),
-                                    LocationCode = t.locationcode.ToString(),
-                                    FromStationNo = t.fromstationno.ToString(),
-                                    ToStationNo = t.tostationno.ToString(),
-                                    ControlDay = t.controlday.ToString(),
-                                    SaleTime = t.saletime.ToString().Substring(0, 2) + ":" + t.saletime.ToString().Substring(2, 2),
-                                    IsSupportCard = t.issupportcard.ToString(),
-                                    GGNum = t.ggnum.ToString(),
-                                    GRNum = t.grnum.ToString(),
-                                    QTNum = t.qtnum.ToString(),
-                                    RWNum = t.rwnum.ToString(),
-                                    RZNum = t.rznum.ToString(),
-                                    TZNum = t.tznum.ToString(),
-                                    WZNum = t.wznum.ToString(),
-                                    YBNum = t.ybnum.ToString(),
-                                    YWNum = t.ywnum.ToString(),
-                                    YZNum = t.yznum.ToString(),
-                                    ZENum = t.zenum.ToString(),
-                                    ZYNum = t.zynum.ToString(),
-                                    SWZNum = t.swznum.ToString(),
-                                    SecretStr = t.secretStr.ToString()
-                                });
+                                    if (isCanBuy && IsCanBuytick)
+                                    {
+                                        ticks.Add(new Tickets()
+                                        {
+                                            TrainNo = t.trainno.ToString(),
+                                            TrainName = t.stationtraincode.ToString(),
+                                            StartStationCode = t.startstationtelecode.ToString(),
+                                            StartStationName = t.startstationname.ToString(),
+                                            EndStationCode = t.endstationtelecode.ToString(),
+                                            EndStationName = t.endstationname.ToString(),
+                                            FromStationCode = t.fromstationtelecode.ToString(),
+                                            FromStationName = t.fromstationname.ToString(),
+                                            ToStationCode = t.tostationtelecode.ToString(),
+                                            ToStationName = t.tostationname.ToString(),
+                                            StartTime = t.starttime.ToString(),
+                                            ArriveTime = t.arrivetime.ToString(),
+                                            From = t.fromstationname.ToString() + "（" + t.starttime.ToString() + "）",
+                                            To = t.tostationname.ToString() + "（" + t.arrivetime.ToString() + "）",
+                                            DayDifference = t.daydifference.ToString(),
+                                            TrainClassName = t.trainclassname.ToString(),
+                                            LiShi = t.lishi.ToString(),
+                                            LiShiDay = t.daydifference.ToString() == "0" ? t.lishi.ToString() + "（当日到达）" :
+                                                    t.daydifference.ToString() == "1" ? t.lishi.ToString() + "（次日到达）" :
+                                                    t.daydifference.ToString() == "2" ? t.lishi.ToString() + "（两天内到达）" :
+                                                    t.daydifference.ToString() == "3" ? t.lishi.ToString() + "（三天内到达）" :
+                                                    t.daydifference.ToString() == "4" ? t.lishi.ToString() + "（四天内到达）" :
+                                                    t.daydifference.ToString() == "5" ? t.lishi.ToString() + "（五天内到达）" :
+                                                    t.daydifference.ToString() == "6" ? t.lishi.ToString() + "（六天内到达）" :
+                                                    t.daydifference.ToString() == "7" ? t.lishi.ToString() + "（七天内到达）" :
+                                                    t.lishi.ToString(),
+                                            IsCanBuy = IsCanBuytick,
+                                            LiShiValue = t.lishiValue.ToString(),
+                                            YPInfo = t.ypinfo.ToString(),
+                                            ControlTrainDay = t.controltrainday.ToString(),
+                                            StartTrainDate = t.starttraindate.ToString().Substring(0, 4) + "-" + t.starttraindate.ToString().Substring(4, 2) + "-" + t.starttraindate.ToString().Substring(6, 2),
+                                            SeatFeature = t.seatfeature.ToString(),
+                                            YPEx = t.ypex.ToString(),
+                                            TrainSeatFeature = t.trainseatfeature.ToString(),
+                                            SeatTypes = t.seattypes.ToString(),
+                                            LocationCode = t.locationcode.ToString(),
+                                            FromStationNo = t.fromstationno.ToString(),
+                                            ToStationNo = t.tostationno.ToString(),
+                                            ControlDay = t.controlday.ToString(),
+                                            SaleTime = t.saletime.ToString().Substring(0, 2) + ":" + t.saletime.ToString().Substring(2, 2),
+                                            IsSupportCard = t.issupportcard.ToString(),
+                                            GGNum = t.ggnum.ToString(),
+                                            GRNum = t.grnum.ToString(),
+                                            QTNum = t.qtnum.ToString(),
+                                            RWNum = t.rwnum.ToString(),
+                                            RZNum = t.rznum.ToString(),
+                                            TZNum = t.tznum.ToString(),
+                                            WZNum = t.wznum.ToString(),
+                                            YBNum = t.ybnum.ToString(),
+                                            YWNum = t.ywnum.ToString(),
+                                            YZNum = t.yznum.ToString(),
+                                            ZENum = t.zenum.ToString(),
+                                            ZYNum = t.zynum.ToString(),
+                                            SWZNum = t.swznum.ToString(),
+                                            SecretStr = t.secretStr.ToString()
+                                        });
+                                    }
+                                    else if(!isCanBuy)
+                                    {
+                                        ticks.Add(new Tickets()
+                                        {
+                                            TrainNo = t.trainno.ToString(),
+                                            TrainName = t.stationtraincode.ToString(),
+                                            StartStationCode = t.startstationtelecode.ToString(),
+                                            StartStationName = t.startstationname.ToString(),
+                                            EndStationCode = t.endstationtelecode.ToString(),
+                                            EndStationName = t.endstationname.ToString(),
+                                            FromStationCode = t.fromstationtelecode.ToString(),
+                                            FromStationName = t.fromstationname.ToString(),
+                                            ToStationCode = t.tostationtelecode.ToString(),
+                                            ToStationName = t.tostationname.ToString(),
+                                            StartTime = t.starttime.ToString(),
+                                            ArriveTime = t.arrivetime.ToString(),
+                                            From = t.fromstationname.ToString() + "（" + t.starttime.ToString() + "）",
+                                            To = t.tostationname.ToString() + "（" + t.arrivetime.ToString() + "）",
+                                            DayDifference = t.daydifference.ToString(),
+                                            TrainClassName = t.trainclassname.ToString(),
+                                            LiShi = t.lishi.ToString(),
+                                            LiShiDay = t.daydifference.ToString() == "0" ? t.lishi.ToString() + "（当日到达）" :
+                                                    t.daydifference.ToString() == "1" ? t.lishi.ToString() + "（次日到达）" :
+                                                    t.daydifference.ToString() == "2" ? t.lishi.ToString() + "（两天内到达）" :
+                                                    t.daydifference.ToString() == "3" ? t.lishi.ToString() + "（三天内到达）" :
+                                                    t.daydifference.ToString() == "4" ? t.lishi.ToString() + "（四天内到达）" :
+                                                    t.daydifference.ToString() == "5" ? t.lishi.ToString() + "（五天内到达）" :
+                                                    t.daydifference.ToString() == "6" ? t.lishi.ToString() + "（六天内到达）" :
+                                                    t.daydifference.ToString() == "7" ? t.lishi.ToString() + "（七天内到达）" :
+                                                    t.lishi.ToString(),
+                                            IsCanBuy = IsCanBuytick,
+                                            LiShiValue = t.lishiValue.ToString(),
+                                            YPInfo = t.ypinfo.ToString(),
+                                            ControlTrainDay = t.controltrainday.ToString(),
+                                            StartTrainDate = t.starttraindate.ToString().Substring(0, 4) + "-" + t.starttraindate.ToString().Substring(4, 2) + "-" + t.starttraindate.ToString().Substring(6, 2),
+                                            SeatFeature = t.seatfeature.ToString(),
+                                            YPEx = t.ypex.ToString(),
+                                            TrainSeatFeature = t.trainseatfeature.ToString(),
+                                            SeatTypes = t.seattypes.ToString(),
+                                            LocationCode = t.locationcode.ToString(),
+                                            FromStationNo = t.fromstationno.ToString(),
+                                            ToStationNo = t.tostationno.ToString(),
+                                            ControlDay = t.controlday.ToString(),
+                                            SaleTime = t.saletime.ToString().Substring(0, 2) + ":" + t.saletime.ToString().Substring(2, 2),
+                                            IsSupportCard = t.issupportcard.ToString(),
+                                            GGNum = t.ggnum.ToString(),
+                                            GRNum = t.grnum.ToString(),
+                                            QTNum = t.qtnum.ToString(),
+                                            RWNum = t.rwnum.ToString(),
+                                            RZNum = t.rznum.ToString(),
+                                            TZNum = t.tznum.ToString(),
+                                            WZNum = t.wznum.ToString(),
+                                            YBNum = t.ybnum.ToString(),
+                                            YWNum = t.ywnum.ToString(),
+                                            YZNum = t.yznum.ToString(),
+                                            ZENum = t.zenum.ToString(),
+                                            ZYNum = t.zynum.ToString(),
+                                            SWZNum = t.swznum.ToString(),
+                                            SecretStr = t.secretStr.ToString()
+                                        });
+                                    }
+                                }
                             }
-                            
                         }
                     }
                 }
@@ -462,9 +529,9 @@ namespace JasonLong.Helper
         /// <param name="selTypes">选择的车次类型</param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public bool GetTickType(string selTypes,string type)
+        public bool GetTickType(string selTypes, string type)
         {
-            if (selTypes=="QB")
+            if (selTypes == "QB")
             {
                 return true;
             }
@@ -689,7 +756,7 @@ namespace JasonLong.Helper
         /// 获取提交订单验证码并识别
         /// </summary>
         /// <returns></returns>
-        public Task<Dictionary<BitmapImage,string>> GetSubmitOrderCode()
+        public Task<Dictionary<BitmapImage, string>> GetSubmitOrderCode()
         {
             return Task.Factory.StartNew(() =>
             {
@@ -697,7 +764,7 @@ namespace JasonLong.Helper
                 var url = ConfigurationManager.AppSettings["OrderSubmitCodeUrl"] + "&rand=randp";
                 var data = httpHelper.GetResponseData(url);
                 BitmapImage orderCodeImg = new BitmapImage();
-                string strOrderCode="";
+                string strOrderCode = "";
                 int count = 0;
                 if (data != null)
                 {

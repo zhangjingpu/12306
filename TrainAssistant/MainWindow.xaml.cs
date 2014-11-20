@@ -17,6 +17,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using TrainAssistant.Models;
 using System.Web;
+using System.Windows.Threading;
 
 namespace TrainAssistant
 {
@@ -254,9 +255,10 @@ namespace TrainAssistant
             {
                 progressRingAnima.IsActive = true;
                 var result = await ticketHelper.Logout();
-                progressRingAnima.IsActive = false;
                 if (result.Contains("已成功注销"))
                 {
+                    progressRingAnima.IsActive = false;
+                    CloseAutoSearch();
                     lblLoginName.Text = "登录";
                     IsShowLoginPopup(true);
                 }
@@ -358,6 +360,7 @@ namespace TrainAssistant
         /// <returns></returns>
         private async Task ReservateTicket()
         {
+            CloseAutoSearch();
             Tickets tickets = gridTrainList.SelectedItem as Tickets;
             if (tickets != null)
             {
@@ -396,9 +399,21 @@ namespace TrainAssistant
         }
 
         /// <summary>
+        /// 关闭自动搜索
+        /// </summary>
+        private void CloseAutoSearch()
+        {
+            disTimer.Stop();
+            progressRingAnima.IsActive = false;
+            borderAwaitTime.Visibility = Visibility.Hidden;
+            chkAutoSearch.IsChecked = false;
+            btnSearch.IsEnabled = true;
+        }
+
+        /// <summary>
         /// 查询
         /// </summary>
-        /// <returns>返回可预订数</returns>
+        /// <returns></returns>
         private async Task<int> SearchTickets()
         {
             lblStatusMsg.Content = "查询中...";
@@ -625,7 +640,7 @@ namespace TrainAssistant
         }
 
         //自动搜索
-        private async void chkAutoSearch_Click(object sender, RoutedEventArgs e)
+        private void chkAutoSearch_Click(object sender, RoutedEventArgs e)
         {
             if (txtStartCity.Text.Trim() == "")
             {
@@ -646,22 +661,36 @@ namespace TrainAssistant
             {
                 progressRingAnima.IsActive = true;
                 btnSearch.IsEnabled = false;
-                //while (true)
-                //{
-                //    Dictionary<int,int> dicCounts = await SearchTickets();
-                //    if (dicCounts.Keys.First() > 0 || dicCounts.Values.First()==0)
-                //    {
-                //        chkAutoSearch.IsChecked = false;
-                //        btnSearch.IsEnabled = true;
-                //        progressRingAnima.IsActive = false;
-                //        break;
-                //    }
-                //}
+                borderAwaitTime.Visibility = Visibility.Visible;
+                disTimer = new DispatcherTimer();
+                disTimer.Interval = new TimeSpan(0, 0, 0, 1);
+                disTimer.Tick += disTimer_Tick;
+                disTimer.Start();
             }
             else
             {
+                disTimer.Stop();
+                borderAwaitTime.Visibility = Visibility.Hidden;
+                progressRingAnima.IsActive = false;
                 btnSearch.IsEnabled = true;
             }
+        }
+
+        DispatcherTimer disTimer;
+        int awaitTime = 3;
+        void disTimer_Tick(object sender, EventArgs e)
+        {
+            txtBlockAwaitTime.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
+            {
+                txtBlockAwaitTime.Text = awaitTime.ToString();
+                if (awaitTime == 0)
+                {
+                    disTimer.Stop();
+                    SearchTickets();
+                    disTimer.Start();
+                }
+            }));
+            awaitTime = awaitTime-- == 0 ? 3 : awaitTime;
         }
 
         //搜索

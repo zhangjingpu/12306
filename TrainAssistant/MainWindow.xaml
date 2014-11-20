@@ -388,6 +388,10 @@
         <!--等待动画-->
         <Controls:ProgressRing Grid.RowSpan="2" IsActive="False" Name="progressRingAnima" Panel.ZIndex="2"/>
 
+        <!--自动搜索时间-->
+        <Border Width="170" Panel.ZIndex="1" Opacity="0.05" Background="White" Name="borderAwaitTime" Visibility="Hidden">
+            <TextBlock Text="3" Foreground="#00B5EC" FontSize="300" VerticalAlignment="Center" HorizontalAlignment="Center" Name="txtBlockAwaitTime" />
+        </Border>
     </Grid>
 
 </Controls:MetroWindow >
