@@ -207,6 +207,41 @@
                 <Button Grid.Row="4" Grid.Column="1" Width="110" Content="提 交" Click="btnSubmit_Click" Height="27" Name="btnSubmit" Style="{DynamicResource SquareButtonStyle}" />
             </Grid>
         </Border>
+        
+        <!--自动提交订单-->
+        <Border Grid.RowSpan="2" Name="borderAutoSubmitOrder" Panel.ZIndex="2" Background="#fff" Width="370" Height="370" Visibility="Hidden">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="100"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="70"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <Label Content="选择乘车信息" FontSize="21" Foreground="#60B2E0" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+                <Button Width="25" Height="25" Name="btnCloseAutoSubmit" ToolTip="关闭" Cursor="Hand" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"   Margin="0,-39,-13,0">
+                    <Button.Template>
+                        <ControlTemplate>
+                            <Ellipse>
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="/Images/close.png"/>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <GroupBox Grid.Row="1" Header="乘客" Margin="0">
+                    <Grid Name="gridContacts"/>
+                </GroupBox>
+                <GroupBox Grid.Row="2" Header="车次" Margin="0">
+                    <Grid Name="gridTickets"/>
+                </GroupBox>
+                <GroupBox Grid.Row="3" Header="席别" Margin="0">
+                    <Grid Name="gridSeatTypes"/>
+                </GroupBox>
+                <Button Grid.Row="4" Width="100" Content="确定" Style="{DynamicResource SquareButtonStyle}" Height="27" />
+            </Grid>
+        </Border>
 
         <TabControl Grid.Row="0">
             <TabControl.Items>
@@ -295,7 +330,7 @@
                                 <Button Style="{DynamicResource SquareButtonStyle}" Name="btnSearch" Grid.Column="2" Height="27" Content="搜  索" Width="100" HorizontalAlignment="Right" Click="btnSearch_Click" IsDefault="True" />
                             </Grid>
                         </Border>
-                        <Controls:ToggleSwitch Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="2" Content="自动提交订单" Width="170" HorizontalAlignment="Right"/>
+                        <Controls:ToggleSwitch Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="2" Content="自动提交订单" Width="170" HorizontalAlignment="Right" Name="tsAutoOrder" Click="tsAutoOrder_Click" />
                         <DataGrid Grid.Row="5" Grid.ColumnSpan="8" Name="gridTrainList" AutoGenerateColumns="False" Margin="0,5,0,0" IsReadOnly="True" MouseDoubleClick="gridTrainList_MouseDoubleClick" SelectionMode="Single">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="车次" Width="110" Binding="{Binding Path=TrainName}" />
@@ -390,7 +425,7 @@
 
         <!--自动搜索时间-->
         <Border Width="170" Panel.ZIndex="1" Opacity="0.05" Background="White" Name="borderAwaitTime" Visibility="Hidden">
-            <TextBlock Text="3" Foreground="#00B5EC" FontSize="300" VerticalAlignment="Center" HorizontalAlignment="Center" Name="txtBlockAwaitTime" />
+            <TextBlock Text="3" Foreground="#60B2E0" FontSize="300" VerticalAlignment="Center" HorizontalAlignment="Center" Name="txtBlockAwaitTime" />
         </Border>
     </Grid>
 

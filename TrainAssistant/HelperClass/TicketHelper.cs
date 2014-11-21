@@ -15,6 +15,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TrainAssistant.Models;
+using System.Runtime.InteropServices;
 
 namespace JasonLong.Helper
 {
@@ -24,6 +25,19 @@ namespace JasonLong.Helper
         DataSecurity dsecurity = new DataSecurity();
         public const string accountFile = "Account";//登录用户信息
         StringBuilder codeBuilder = new StringBuilder(8, 8);
+
+        [DllImport("wininet")]
+        private static extern bool InternetGetConnectedState(out int connectionDescription, int reservedValue);
+
+        /// <summary>
+        /// 检查是否连接Internet网络
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckInternetConnectedState()
+        {
+            int connDescript = 0;
+            return InternetGetConnectedState(out connDescript, 0);
+        }
 
         /// <summary>
         /// 读取用户信息

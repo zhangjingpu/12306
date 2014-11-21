@@ -39,19 +39,27 @@ namespace TrainAssistant
         //窗口加载
         private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
-
-            txtDate.DisplayDateStart = DateTime.Now;
-            txtDate.DisplayDateEnd = DateTime.Now.AddDays(19);
-            txtDate.Text = txtDate.DisplayDateEnd.Value.ToString("yyyy-MM-dd");
-
-            IsShowLoginPopup(true);
-
-            byte[] buffter = TrainAssistant.Properties.Resources.data;
-            if (!BasicOCR.LoadLibFromBuffer(buffter, buffter.Length, "123"))
+            if (ticketHelper.CheckInternetConnectedState())
             {
-                MessageBox.Show("API初始化失败！");
-            }
+                txtDate.DisplayDateStart = DateTime.Now;
+                txtDate.DisplayDateEnd = DateTime.Now.AddDays(19);
+                txtDate.Text = txtDate.DisplayDateEnd.Value.ToString("yyyy-MM-dd");
 
+                IsShowLoginPopup(true);
+
+                byte[] buffter = TrainAssistant.Properties.Resources.data;
+                if (!BasicOCR.LoadLibFromBuffer(buffter, buffter.Length, "123"))
+                {
+                    MessageBox.Show("API初始化失败！");
+                }
+            }
+            else
+            {
+                if (MessageBoxResult.OK == MessageBox.Show("网络无Internet链接，检查网络后再试！", "消息", MessageBoxButton.OK, MessageBoxImage.Warning))
+                {
+                    this.Close();
+                }
+            }
         }
 
         /// <summary>
@@ -358,9 +366,12 @@ namespace TrainAssistant
         /// 预订
         /// </summary>
         /// <returns></returns>
-        private async Task ReservateTicket()
+        private async Task ReservateTicket(bool isAutoSearch)
         {
-            CloseAutoSearch();
+            if (isAutoSearch)
+            {
+                CloseAutoSearch();
+            }
             Tickets tickets = gridTrainList.SelectedItem as Tickets;
             if (tickets != null)
             {
@@ -680,13 +691,13 @@ namespace TrainAssistant
         int awaitTime = 3;
         void disTimer_Tick(object sender, EventArgs e)
         {
-            txtBlockAwaitTime.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
+            txtBlockAwaitTime.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(async() =>
             {
                 txtBlockAwaitTime.Text = awaitTime.ToString();
                 if (awaitTime == 0)
                 {
                     disTimer.Stop();
-                    SearchTickets();
+                    await SearchTickets();
                     disTimer.Start();
                 }
             }));
@@ -719,7 +730,7 @@ namespace TrainAssistant
         //预订
         private async void Reservate_Click(object sender, RoutedEventArgs e)
         {
-            await ReservateTicket();
+            await ReservateTicket((bool)chkAutoSearch.IsChecked);
         }
 
         //加载乘客
@@ -730,7 +741,7 @@ namespace TrainAssistant
             if (result)
             {
                 List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
-                int row = contacts.Count, cell = 5;
+                int row = (int)Math.Ceiling((double)contacts.Count / 5), cell = 5;
                 while (row-- > 0)
                 {
                     gContacts.RowDefinitions.Add(new RowDefinition()
@@ -748,7 +759,7 @@ namespace TrainAssistant
                 if (contacts.Count > 0)
                 {
                     gContacts.Children.Clear();
-                    int r = 0, c = 0, rs = (int)Math.Ceiling((double)contacts.Count / 5);
+                    int r = 0, c = 0;
                     for (int i = 0; i < contacts.Count; i++)
                     {
                         CheckBox chkContact = new CheckBox()
@@ -1041,15 +1052,178 @@ namespace TrainAssistant
         //双击行
         private async void gridTrainList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            await ReservateTicket();
+            await ReservateTicket((bool)chkAutoSearch.IsChecked);
         }
 
         //可预订
         private async void chkCanReservate_Click(object sender, RoutedEventArgs e)
         {
             //progressRingAnima.IsActive = true;
-            //await SearchTickets();
             //progressRingAnima.IsActive = false;
+        }
+
+        //自动提交订单
+        private async void tsAutoOrder_Click(object sender, RoutedEventArgs e)
+        {
+            if ((bool)tsAutoOrder.IsChecked)
+            {
+                progressRingAnima.IsActive = true;
+                int tickCount= await SearchTickets();
+                if (tickCount > 0)
+                {
+                    borderAutoSubmitOrder.Visibility = Visibility.Visible;
+
+                    //乘客
+                    lblStatusMsg.Content = "加载乘客中...";
+                    bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
+                    if (result)
+                    {
+                        List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
+                        int cRow = (int)Math.Ceiling((double)contacts.Count / 6), cCell = 6;
+                        while (cRow-- > 0)
+                        {
+                            gridContacts.RowDefinitions.Add(new RowDefinition()
+                            {
+                                Height = new GridLength(15)
+                            });
+                        }
+                        while (cCell-- > 0)
+                        {
+                            gridContacts.ColumnDefinitions.Add(new ColumnDefinition()
+                            {
+                                Width = new GridLength()
+                            });
+                        }
+                        if (contacts.Count > 0)
+                        {
+                            gridContacts.Children.Clear();
+                            int r = 0, c = 0;
+                            for (int i = 0; i < contacts.Count; i++)
+                            {
+                                CheckBox autoChkContact = new CheckBox()
+                                {
+                                    Content = contacts[i].PassengerName,
+                                    Name = "chk" + contacts[i].Code,
+                                    Height = 15,
+                                    Tag = contacts[i].PassengerTypeName + "#" + contacts[i].PassengerName + "#" + contacts[i].PassengerIdTypeName + "#" + contacts[i].PassengerIdNo + "#" + contacts[i].Mobile
+                                };
+                                autoChkContact.Click += autoChkContact_Click;
+                                gridContacts.Children.Add(autoChkContact);
+                                if (i > 0)
+                                {
+                                    if ((i % 6) == 0)
+                                    {
+                                        r += 1;
+                                        c = 0;
+                                    }
+                                    else
+                                    {
+                                        c++;
+                                    }
+                                }
+                                autoChkContact.SetValue(Grid.RowProperty, r);
+                                autoChkContact.SetValue(Grid.ColumnProperty, c);
+                            }
+                        }
+                    }
+
+                    //车次
+                    List<Tickets> lstTickets = gridTrainList.ItemsSource as List<Tickets>;
+                    int tRow = (int)Math.Ceiling((double)lstTickets.Count() / 6), tCell = 6;
+                    while (tRow-- > 0)
+                    {
+                        gridTickets.RowDefinitions.Add(new RowDefinition()
+                        {
+                            Height = new GridLength(15)
+                        });
+                    }
+                    while (tCell-- > 0)
+                    {
+                        gridTickets.ColumnDefinitions.Add(new ColumnDefinition()
+                        {
+                            Width = new GridLength()
+                        });
+                    }
+                    gridTickets.Children.Clear();
+                    int tR = 0, tC = 0;
+                    for (int t = 0; t < lstTickets.Count(); t++)
+                    {
+                        CheckBox chkTicket = new CheckBox()
+                        {
+                            Name="chk"+lstTickets[t].TrainNo,
+                            Content=lstTickets[t].TrainName,
+                            Tag=lstTickets[t].TrainName,
+                            ToolTip="起止时间：【"+lstTickets[t].StartTime+"-"+lstTickets[t].ArriveTime+"】\n历时：【"+lstTickets[t].LiShi+"】"
+                        };
+                        chkTicket.Click += chkTicket_Click;
+                        gridTickets.Children.Add(chkTicket);
+                        if (t > 0)
+                        {
+                            if ((t % 6) == 0)
+                            {
+                                tR += 1;
+                                tC = 0;
+                            }
+                            else
+                            {
+                                tC++;
+                            }
+                        }
+                        chkTicket.SetValue(Grid.RowProperty, tR);
+                        chkTicket.SetValue(Grid.ColumnProperty, tC);
+                    }
+                }
+            }
+            else
+            {
+                borderAutoSubmitOrder.Visibility = Visibility.Hidden;
+            }
+        }
+
+        //自动提交订单--单击车次
+        void chkTicket_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> lstTickets = new List<string>();
+            foreach (var chkItem in gridTickets.Children)
+            {
+                if (chkItem is CheckBox)
+                {
+                    CheckBox chkTicket = chkItem as CheckBox;
+                    if ((bool)chkTicket.IsChecked)
+                    {
+                        lstTickets.Add(chkTicket.Tag.ToString());
+                    }
+                }
+            }
+            if (lstTickets.Count() > 5)
+            {
+                MessageBox.Show("选择车次数不能超过5个", "消息");
+                CheckBox chkObj = e.Source as CheckBox;
+                chkObj.IsChecked = false;
+            }
+        }
+
+        //自动提交订单--单击乘客
+        private void autoChkContact_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> lstContacts = new List<string>();
+            foreach (var chkItem in gridContacts.Children)
+            {
+                if (chkItem is CheckBox)
+                {
+                    CheckBox chkContact = chkItem as CheckBox;
+                    if ((bool)chkContact.IsChecked)
+                    {
+                        lstContacts.Add(chkContact.Content.ToString());
+                    }
+                }
+            }
+            if (lstContacts.Count() > 5)
+            {
+                MessageBox.Show("选择乘客数不能超过5个", "消息");
+                CheckBox chkObj = e.Source as CheckBox;
+                chkObj.IsChecked = false;
+            }
         }
 
     }
