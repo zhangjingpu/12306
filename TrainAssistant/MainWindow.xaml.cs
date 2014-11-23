@@ -691,7 +691,7 @@ namespace TrainAssistant
         int awaitTime = 3;
         void disTimer_Tick(object sender, EventArgs e)
         {
-            txtBlockAwaitTime.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(async() =>
+            txtBlockAwaitTime.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(async () =>
             {
                 txtBlockAwaitTime.Text = awaitTime.ToString();
                 if (awaitTime == 0)
@@ -1068,10 +1068,11 @@ namespace TrainAssistant
             if ((bool)tsAutoOrder.IsChecked)
             {
                 progressRingAnima.IsActive = true;
-                int tickCount= await SearchTickets();
+                int tickCount = await SearchTickets();
                 if (tickCount > 0)
                 {
                     borderAutoSubmitOrder.Visibility = Visibility.Visible;
+                    gridOpacity.Visibility = Visibility.Visible;
 
                     //乘客
                     lblStatusMsg.Content = "加载乘客中...";
@@ -1128,6 +1129,7 @@ namespace TrainAssistant
                     }
 
                     //车次
+                    lblStatusMsg.Content = "乘客加载完成，正在加载车次中...";
                     List<Tickets> lstTickets = gridTrainList.ItemsSource as List<Tickets>;
                     int tRow = (int)Math.Ceiling((double)lstTickets.Count() / 6), tCell = 6;
                     while (tRow-- > 0)
@@ -1148,12 +1150,22 @@ namespace TrainAssistant
                     int tR = 0, tC = 0;
                     for (int t = 0; t < lstTickets.Count(); t++)
                     {
+                        string swz = "无--".Contains(lstTickets[t].SWZNum) ? "" : "商务座";
+                        string tdz = "无--".Contains(lstTickets[t].TZNum) ? "" : "特等座";
+                        string ydz = "无--".Contains(lstTickets[t].ZYNum) ? "" : "一等座";
+                        string edz = "无--".Contains(lstTickets[t].ZENum) ? "" : "二等座";
+                        string gjrw = "无--".Contains(lstTickets[t].GRNum) ? "" : "高级软卧";
+                        string rw = "无--".Contains(lstTickets[t].RWNum) ? "" : "软卧";
+                        string yw = "无--".Contains(lstTickets[t].YWNum) ? "" : "硬卧";
+                        string rz = "无--".Contains(lstTickets[t].RZNum) ? "" : "软座";
+                        string yz = "无--".Contains(lstTickets[t].YZNum) ? "" : "硬座";
+                        string wz = "无--".Contains(lstTickets[t].WZNum) ? "" : "无座";
                         CheckBox chkTicket = new CheckBox()
                         {
-                            Name="chk"+lstTickets[t].TrainNo,
-                            Content=lstTickets[t].TrainName,
-                            Tag=lstTickets[t].TrainName,
-                            ToolTip="起止时间：【"+lstTickets[t].StartTime+"-"+lstTickets[t].ArriveTime+"】\n历时：【"+lstTickets[t].LiShi+"】"
+                            Name = "chk" + lstTickets[t].TrainNo,
+                            Content = lstTickets[t].TrainName,
+                            Tag = swz + "," + tdz + "," + ydz + "," + edz + "," + gjrw + "," + rw + "," + yw + "," + rz + "," + yz + "," + wz,
+                            ToolTip = "起止时间：【" + lstTickets[t].StartTime + "-" + lstTickets[t].ArriveTime + "】\n历时：【" + lstTickets[t].LiShi + "】"
                         };
                         chkTicket.Click += chkTicket_Click;
                         gridTickets.Children.Add(chkTicket);
@@ -1172,11 +1184,49 @@ namespace TrainAssistant
                         chkTicket.SetValue(Grid.RowProperty, tR);
                         chkTicket.SetValue(Grid.ColumnProperty, tC);
                     }
+
+                    ////席别
+                    //lblStatusMsg.Content = "车次加载完成，正在加载席别中...";
+                    //Dictionary<string, string> dicSeatTypes = new Dictionary<string, string>()
+                    //{
+                    //    {"商务座","SWZ"},
+                    //    {"特等座","TZ"},
+                    //    {"一等座","ZY"},
+                    //    {"二等座","ZE"},
+                    //    {"高级软卧","GR"},
+                    //    {"软卧","RW"},
+                    //    {"硬卧","YW"},
+                    //    {"软座","RZ"},
+                    //    {"硬座","YZ"},
+                    //    {"无座","WZ"}
+                    //};
+
+                    lblStatusMsg.Content = "预选信息加载完成";
+                    progressRingAnima.IsActive = false;
                 }
             }
-            else
+        }
+
+        //自动提交订单--单击席别
+        private void chkSeatType_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> lstSeatTypes = new List<string>();
+            foreach (var chkItem in gridSeatTypes.Children)
             {
-                borderAutoSubmitOrder.Visibility = Visibility.Hidden;
+                if (chkItem is CheckBox)
+                {
+                    CheckBox chkSeatType = chkItem as CheckBox;
+                    if ((bool)chkSeatType.IsChecked)
+                    {
+                        lstSeatTypes.Add(chkSeatType.Tag.ToString());
+                    }
+                }
+            }
+            if (lstSeatTypes.Count() > 5)
+            {
+                MessageBox.Show("选择席别数不能超过5个", "消息");
+                CheckBox chkObj = e.Source as CheckBox;
+                chkObj.IsChecked = false;
             }
         }
 
@@ -1184,6 +1234,7 @@ namespace TrainAssistant
         void chkTicket_Click(object sender, RoutedEventArgs e)
         {
             List<string> lstTickets = new List<string>();
+            string strSeatTypes = "";
             foreach (var chkItem in gridTickets.Children)
             {
                 if (chkItem is CheckBox)
@@ -1192,8 +1243,66 @@ namespace TrainAssistant
                     if ((bool)chkTicket.IsChecked)
                     {
                         lstTickets.Add(chkTicket.Tag.ToString());
+                        strSeatTypes += chkTicket.Tag.ToString() + ",";
                     }
                 }
+            }
+            var arrSeatType = strSeatTypes.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            Dictionary<string, string> dicSeatTypes = new Dictionary<string, string>();
+            List<string> lstSeat = new List<string>();
+            for (int i = 0; i < arrSeatType.Count(); i++)
+            {
+                lstSeat.Add(arrSeatType[i]);
+            }
+            lstSeat = lstSeat.Distinct().ToList();
+            dicSeatTypes.Clear();
+            for (int s = 0; s < lstSeat.Count(); s++)
+            {
+                string seatValue = lstSeat[s] == "商务座" ? "SWZ" : lstSeat[s] == "特等座" ? "TZ" : lstSeat[s] == "一等座" ? "ZY" : lstSeat[s] == "二等座" ? "ZE" : lstSeat[s] == "高级软卧" ? "GR" : lstSeat[s] == "软卧" ? "RW" : lstSeat[s] == "硬卧" ? "YW" : lstSeat[s] == "软座" ? "RZ" : lstSeat[s] == "硬座" ? "YZ" : lstSeat[s] == "无座" ? "WZ" : "QT";
+                dicSeatTypes.Add(lstSeat[s], seatValue);
+            }
+            int sRow = (int)Math.Ceiling((double)dicSeatTypes.Count() / 6), sCell = 6;
+            while (sRow-- > 0)
+            {
+                gridSeatTypes.RowDefinitions.Add(new RowDefinition()
+                {
+                    Height = new GridLength(15)
+                });
+            }
+            while (sCell-- > 0)
+            {
+                gridSeatTypes.ColumnDefinitions.Add(new ColumnDefinition()
+                {
+                    Width = new GridLength()
+                });
+            }
+            gridSeatTypes.Children.Clear();
+            int sR = 0, sC = 0, sT= 0;
+            foreach (var d in dicSeatTypes)
+            {
+                CheckBox chkSeatType = new CheckBox()
+                {
+                    Name = "chk" + d.Value,
+                    Content = d.Key,
+                    Tag = d.Value
+                };
+                chkSeatType.Click += chkSeatType_Click;
+                gridSeatTypes.Children.Add(chkSeatType);
+                if (sT > 0)
+                {
+                    if (sT % 6 == 0)
+                    {
+                        sR += 1;
+                        sC = 0;
+                    }
+                    else
+                    {
+                        sC++;
+                    }
+                }
+                chkSeatType.SetValue(Grid.RowProperty, sR);
+                chkSeatType.SetValue(Grid.ColumnProperty, sC);
+                sT++;
             }
             if (lstTickets.Count() > 5)
             {
@@ -1224,6 +1333,14 @@ namespace TrainAssistant
                 CheckBox chkObj = e.Source as CheckBox;
                 chkObj.IsChecked = false;
             }
+        }
+
+        //关闭自动提交订单
+        private void btnCloseAutoSubmit_Click(object sender, RoutedEventArgs e)
+        {
+            borderAutoSubmitOrder.Visibility = Visibility.Hidden;
+            gridOpacity.Visibility = Visibility.Hidden;
+            tsAutoOrder.IsChecked = false;
         }
 
     }

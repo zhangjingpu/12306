@@ -209,17 +209,19 @@
         </Border>
         
         <!--自动提交订单-->
-        <Border Grid.RowSpan="2" Name="borderAutoSubmitOrder" Panel.ZIndex="2" Background="#fff" Width="370" Height="370" Visibility="Hidden">
+        <Border Grid.RowSpan="2" Name="borderAutoSubmitOrder" Panel.ZIndex="2" Background="#fff" Width="390" Height="390" Visibility="Hidden" Padding="10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="40"/>
                     <RowDefinition Height="100"/>
+                    <RowDefinition Height="4"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="4"/>
                     <RowDefinition Height="70"/>
                     <RowDefinition Height="40"/>
                 </Grid.RowDefinitions>
                 <Label Content="选择乘车信息" FontSize="21" Foreground="#60B2E0" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
-                <Button Width="25" Height="25" Name="btnCloseAutoSubmit" ToolTip="关闭" Cursor="Hand" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"   Margin="0,-39,-13,0">
+                <Button Width="25" Height="25" Name="btnCloseAutoSubmit" ToolTip="关闭" Cursor="Hand" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"   Margin="0,-58,-23,0" Click="btnCloseAutoSubmit_Click">
                     <Button.Template>
                         <ControlTemplate>
                             <Ellipse>
@@ -230,16 +232,16 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <GroupBox Grid.Row="1" Header="乘客" Margin="0">
+                <GroupBox Grid.Row="1" Header="乘客" Margin="0" Padding="5">
                     <Grid Name="gridContacts"/>
                 </GroupBox>
-                <GroupBox Grid.Row="2" Header="车次" Margin="0">
+                <GroupBox Grid.Row="3" Header="车次" Margin="0" Padding="5">
                     <Grid Name="gridTickets"/>
                 </GroupBox>
-                <GroupBox Grid.Row="3" Header="席别" Margin="0">
+                <GroupBox Grid.Row="5" Header="席别" Margin="0" Padding="5">
                     <Grid Name="gridSeatTypes"/>
                 </GroupBox>
-                <Button Grid.Row="4" Width="100" Content="确定" Style="{DynamicResource SquareButtonStyle}" Height="27" />
+                <Button Grid.Row="6" Width="100" Content="确定" Style="{DynamicResource SquareButtonStyle}" Height="27" />
             </Grid>
         </Border>
 
