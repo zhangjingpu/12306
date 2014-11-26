@@ -157,8 +157,16 @@ namespace TrainAssistant
             progressRingAnima.IsActive = true;
             lblStatusMsg.Content = "获取验证码中...";
             Dictionary<BitmapImage, string> dicLoginCode = await ticketHelper.GetLoginCodeAsync();
-            imgCode.Source = dicLoginCode.Keys.First();
-            txtValidateCode.Text = dicLoginCode.Values.First();
+            if (borderAutoSubmitOrderCode.Visibility == Visibility.Visible)
+            {
+                imgAutoSubmitOrderCode.Source = dicLoginCode.Keys.First();
+                txtAutoSubmitCode.Text = dicLoginCode.Values.First();
+            }
+            else
+            {
+                imgCode.Source = dicLoginCode.Keys.First();
+                txtValidateCode.Text = dicLoginCode.Values.First();
+            }
             lblStatusMsg.Content = "获取验证码完成";
             progressRingAnima.IsActive = false;
         }
@@ -1073,6 +1081,7 @@ namespace TrainAssistant
                 {
                     borderAutoSubmitOrder.Visibility = Visibility.Visible;
                     gridOpacity.Visibility = Visibility.Visible;
+                    gridSeatTypes.Children.Clear();
 
                     //乘客
                     lblStatusMsg.Content = "加载乘客中...";
@@ -1106,7 +1115,8 @@ namespace TrainAssistant
                                     Content = contacts[i].PassengerName,
                                     Name = "chk" + contacts[i].Code,
                                     Height = 15,
-                                    Tag = contacts[i].PassengerTypeName + "#" + contacts[i].PassengerName + "#" + contacts[i].PassengerIdTypeName + "#" + contacts[i].PassengerIdNo + "#" + contacts[i].Mobile
+                                    Tag = contacts[i].PassengerType + "," + contacts[i].PassengerName + "," + contacts[i].PassengerIdTypeCode + "," + contacts[i].PassengerIdNo + "," + contacts[i].Mobile,
+                                    Uid = contacts[i].PassengerName + "," + contacts[i].PassengerIdTypeCode + "," + contacts[i].PassengerIdNo + "," + contacts[i].PassengerType
                                 };
                                 autoChkContact.Click += autoChkContact_Click;
                                 gridContacts.Children.Add(autoChkContact);
@@ -1165,7 +1175,8 @@ namespace TrainAssistant
                             Name = "chk" + lstTickets[t].TrainNo,
                             Content = lstTickets[t].TrainName,
                             Tag = swz + "," + tdz + "," + ydz + "," + edz + "," + gjrw + "," + rw + "," + yw + "," + rz + "," + yz + "," + wz,
-                            ToolTip = "起止时间：【" + lstTickets[t].StartTime + "-" + lstTickets[t].ArriveTime + "】\n历时：【" + lstTickets[t].LiShi + "】"
+                            ToolTip = "起止时间：【" + lstTickets[t].StartTime + "-" + lstTickets[t].ArriveTime + "】\n历时：【" + lstTickets[t].LiShi + "】",
+                            Uid = lstTickets[t].SecretStr + "," + lstTickets[t].YPInfo
                         };
                         chkTicket.Click += chkTicket_Click;
                         gridTickets.Children.Add(chkTicket);
@@ -1184,22 +1195,6 @@ namespace TrainAssistant
                         chkTicket.SetValue(Grid.RowProperty, tR);
                         chkTicket.SetValue(Grid.ColumnProperty, tC);
                     }
-
-                    ////席别
-                    //lblStatusMsg.Content = "车次加载完成，正在加载席别中...";
-                    //Dictionary<string, string> dicSeatTypes = new Dictionary<string, string>()
-                    //{
-                    //    {"商务座","SWZ"},
-                    //    {"特等座","TZ"},
-                    //    {"一等座","ZY"},
-                    //    {"二等座","ZE"},
-                    //    {"高级软卧","GR"},
-                    //    {"软卧","RW"},
-                    //    {"硬卧","YW"},
-                    //    {"软座","RZ"},
-                    //    {"硬座","YZ"},
-                    //    {"无座","WZ"}
-                    //};
 
                     lblStatusMsg.Content = "预选信息加载完成";
                     progressRingAnima.IsActive = false;
@@ -1242,10 +1237,20 @@ namespace TrainAssistant
                     CheckBox chkTicket = chkItem as CheckBox;
                     if ((bool)chkTicket.IsChecked)
                     {
-                        lstTickets.Add(chkTicket.Tag.ToString());
-                        strSeatTypes += chkTicket.Tag.ToString() + ",";
+                        lstTickets.Add(chkTicket.Content.ToString());
+                        if (lstTickets.Count() < 5)
+                        {
+                            strSeatTypes += chkTicket.Tag.ToString() + ",";
+                        }
                     }
                 }
+            }
+            if (lstTickets.Count() > 5)
+            {
+                MessageBox.Show("选择车次数不能超过5个", "消息");
+                CheckBox chkObj = e.Source as CheckBox;
+                chkObj.IsChecked = false;
+                return;
             }
             var arrSeatType = strSeatTypes.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             Dictionary<string, string> dicSeatTypes = new Dictionary<string, string>();
@@ -1258,10 +1263,10 @@ namespace TrainAssistant
             dicSeatTypes.Clear();
             for (int s = 0; s < lstSeat.Count(); s++)
             {
-                string seatValue = lstSeat[s] == "商务座" ? "SWZ" : lstSeat[s] == "特等座" ? "TZ" : lstSeat[s] == "一等座" ? "ZY" : lstSeat[s] == "二等座" ? "ZE" : lstSeat[s] == "高级软卧" ? "GR" : lstSeat[s] == "软卧" ? "RW" : lstSeat[s] == "硬卧" ? "YW" : lstSeat[s] == "软座" ? "RZ" : lstSeat[s] == "硬座" ? "YZ" : lstSeat[s] == "无座" ? "WZ" : "QT";
+                string seatValue = lstSeat[s] == "商务座" ? "9" : lstSeat[s] == "特等座" ? "P" : lstSeat[s] == "一等座" ? "M" : lstSeat[s] == "二等座" ? "O" : lstSeat[s] == "高级软卧" ? "6" : lstSeat[s] == "软卧" ? "4" : lstSeat[s] == "硬卧" ? "3" : lstSeat[s] == "软座" ? "2" : lstSeat[s] == "硬座" ? "1" : lstSeat[s] == "无座" ? "1" : "1";
                 dicSeatTypes.Add(lstSeat[s], seatValue);
             }
-            int sRow = (int)Math.Ceiling((double)dicSeatTypes.Count() / 6), sCell = 6;
+            int sRow = (int)Math.Ceiling((double)lstSeat.Count() / 6), sCell = 6;
             while (sRow-- > 0)
             {
                 gridSeatTypes.RowDefinitions.Add(new RowDefinition()
@@ -1277,7 +1282,7 @@ namespace TrainAssistant
                 });
             }
             gridSeatTypes.Children.Clear();
-            int sR = 0, sC = 0, sT= 0;
+            int sR = 0, sC = 0, sT = 0;
             foreach (var d in dicSeatTypes)
             {
                 CheckBox chkSeatType = new CheckBox()
@@ -1304,16 +1309,10 @@ namespace TrainAssistant
                 chkSeatType.SetValue(Grid.ColumnProperty, sC);
                 sT++;
             }
-            if (lstTickets.Count() > 5)
-            {
-                MessageBox.Show("选择车次数不能超过5个", "消息");
-                CheckBox chkObj = e.Source as CheckBox;
-                chkObj.IsChecked = false;
-            }
         }
 
         //自动提交订单--单击乘客
-        private void autoChkContact_Click(object sender, RoutedEventArgs e)
+        void autoChkContact_Click(object sender, RoutedEventArgs e)
         {
             List<string> lstContacts = new List<string>();
             foreach (var chkItem in gridContacts.Children)
@@ -1341,6 +1340,145 @@ namespace TrainAssistant
             borderAutoSubmitOrder.Visibility = Visibility.Hidden;
             gridOpacity.Visibility = Visibility.Hidden;
             tsAutoOrder.IsChecked = false;
+        }
+
+        //自动提交订单--确定
+        private async void btnAutoSubmitOrder_Click(object sender, RoutedEventArgs e)
+        {
+            borderAutoSubmitOrder.Visibility = Visibility.Hidden;
+            gridOpacity.Visibility = Visibility.Hidden;
+            tsAutoOrder.IsChecked = false;
+            progressRingAnima.IsActive = true;
+            List<string> lstSeatTypes = new List<string>();
+            foreach (var chkItem in gridSeatTypes.Children)
+            {
+                if (chkItem is CheckBox)
+                {
+                    CheckBox chkSeatType = chkItem as CheckBox;
+                    if ((bool)chkSeatType.IsChecked)
+                    {
+                        lstSeatTypes.Add(chkSeatType.Tag.ToString());
+                    }
+                }
+            }
+            if (lstSeatTypes.Count() < 1)
+            {
+                foreach (var chkItem in gridSeatTypes.Children)
+                {
+                    if (chkItem is CheckBox)
+                    {
+                        CheckBox chkSeatType = chkItem as CheckBox;
+                        lstSeatTypes.Add(chkSeatType.Tag.ToString());
+                    }
+                }
+            }
+            List<string> lstContacts = new List<string>();
+            string passengerTickets = "", oldPassengers = "";
+            foreach (var chkItem in gridContacts.Children)
+            {
+                if (chkItem is CheckBox)
+                {
+                    CheckBox chkContact = chkItem as CheckBox;
+                    if ((bool)chkContact.IsChecked)
+                    {
+                        lstContacts.Add(chkContact.Content.ToString());
+                        passengerTickets += lstSeatTypes[0] + ",0," + chkContact.Tag.ToString() + ",N_";
+                        oldPassengers += chkContact.Uid.ToString() + "_";
+                    }
+                }
+            }
+            if (lstContacts.Count() < 1)
+            {
+                progressRingAnima.IsActive = false;
+                MessageBox.Show("未选择乘客！", "消息");
+                return;
+            }
+            passengerTickets = passengerTickets.TrimEnd('_');
+            lblPassengers.Tag = passengerTickets;
+            lblPassengers.Uid = oldPassengers;
+            foreach (var chkItem in gridTickets.Children)
+            {
+                if (chkItem is CheckBox)
+                {
+                    CheckBox chkTicket = chkItem as CheckBox;
+                    if ((bool)chkTicket.IsChecked)
+                    {
+                        string strSecre = chkTicket.Uid.ToString();
+                        Tickets ticket = new Tickets()
+                        {
+                            SecretStr = strSecre.Substring(0, strSecre.IndexOf(',')),
+                            FromStationName = txtStartCity.Text,
+                            ToStationName = txtEndCity.Text,
+                            StartTrainDate = txtDate.Text.Replace('/', '-'),
+                            FromStationCode = txtStartCity.SelectedValue.ToString(),
+                            ToStationCode = txtEndCity.SelectedValue.ToString(),
+                            YPInfo = strSecre.Substring(strSecre.IndexOf(',') + 1),
+                            TrainNo = chkTicket.Name.Replace("chk",""),
+                            TrainName=chkTicket.Content.ToString()
+                        };
+                        Dictionary<bool, string> dicAutoSubmitOrder = await ticketHelper.AutoSubmitOrderRequest(ticket, passengerTickets, oldPassengers);
+                        if (!dicAutoSubmitOrder.Keys.First())
+                        {
+                            continue;
+                        }
+                        var resultArr = dicAutoSubmitOrder.Values.First().Split('#');
+                        lblAutoIsChange.Tag = resultArr[1];
+                        lblAutoIsChange.Uid = resultArr[2];
+                        lblAutoIsChange.Content = resultArr[0];
+                        OrderQueue orderQueue = await ticketHelper.GetQueueAsync(ticket, lstSeatTypes[0]);
+                        if (orderQueue == null)
+                        {
+                            continue;
+                        }
+                        borderAutoSubmitOrderCode.Visibility = Visibility.Visible;
+                        gridOpacity.Visibility = Visibility.Visible;
+                        Dictionary<BitmapImage, string> dicAutoSubmitCode = await ticketHelper.GetLoginCodeAsync();
+                        imgAutoSubmitOrderCode.Source = dicAutoSubmitCode.Keys.First();
+                        txtAutoSubmitCode.Text = dicAutoSubmitCode.Values.First();
+                    }
+                }
+            }
+            progressRingAnima.IsActive = false;
+        }
+
+        //验证码输入长度等于4位，自动提交
+        private async void txtAutoSubmitCode_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (txtAutoSubmitCode.Text.Trim().Length == 4)
+            {
+                Dictionary<bool, string> dicResult = await ticketHelper.ConfirmOrderForAutoQueue(lblPassengers.Tag.ToString(), lblPassengers.Uid.ToString(), txtAutoSubmitCode.Text, lblAutoIsChange.Tag.ToString(), lblAutoIsChange.Uid.ToString(), lblAutoIsChange.Content.ToString());
+                if (!dicResult.Keys.First())
+                {
+                    MessageBox.Show(dicResult.Values.First(), "消息");
+                    return;
+                }
+                borderAutoSubmitOrderCode.Visibility = Visibility.Hidden;
+                gridOpacity.Visibility = Visibility.Hidden;
+                //等待出票
+                while (true)
+                {
+                    QueryOrderWaitTime queryOrderWaitTime = await ticketHelper.QueryOrderWaitTime("", "dc", "");
+                    if (queryOrderWaitTime.WaitTime <= 0)
+                    {
+                        if (!string.IsNullOrEmpty(queryOrderWaitTime.OrderId))
+                        {
+                            MessageBox.Show("出票成功！订单号：【" + queryOrderWaitTime.OrderId + "】","消息",MessageBoxButton.OK,MessageBoxImage.Information);
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        lblStatusMsg.Content = queryOrderWaitTime.Count > 0 ? "前面还有【" + queryOrderWaitTime.WaitCount + "】订单等待处理，大约需等待【" + queryOrderWaitTime.WaitTime + "】秒" : "正在处理订单，大约需要" + queryOrderWaitTime.WaitTime + "秒";
+                    }
+                }
+            }
+        }
+
+        //关闭自动提交验证码输入层
+        private void btnCloseAutoSubmitcode_Click(object sender, RoutedEventArgs e)
+        {
+            borderAutoSubmitOrderCode.Visibility = Visibility.Hidden;
+            gridOpacity.Visibility = Visibility.Hidden;
         }
 
     }

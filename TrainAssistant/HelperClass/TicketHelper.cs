@@ -125,7 +125,7 @@ namespace JasonLong.Helper
         }
 
         /// <summary>
-        /// 获取登录验证码图片并识别
+        /// 获取登录验证码图片并识别（自动提交订单验证码）
         /// </summary>
         public Task<Dictionary<BitmapImage, string>> GetLoginCodeAsync()
         {
@@ -971,14 +971,17 @@ namespace JasonLong.Helper
         /// <param name="jsonAtt"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public Task<QueryOrderWaitTime> QueryOrderWaitTime(string random, string tourFlag, string jsonAtt, string token)
+        public Task<QueryOrderWaitTime> QueryOrderWaitTime(string random, string tourFlag, string jsonAtt, string token="")
         {
             return Task.Factory.StartNew(() =>
             {
                 Thread.Sleep(100);
                 QueryOrderWaitTime queryOrderWaitTime = new QueryOrderWaitTime();
-                string waitTimeUrl = ConfigurationManager.AppSettings["QueryOrderWaitTimeUrl"].ToString() + "?random={0}&tourFlag={1}&_json_att={2}&REPEAT_SUBMIT_TOKEN={3}";
-                waitTimeUrl = string.Format(waitTimeUrl, random, tourFlag, jsonAtt, token);
+                string waitTimeUrl = ConfigurationManager.AppSettings["QueryOrderWaitTimeUrl"].ToString() + "?random=" + random + "&tourFlag=" + tourFlag + "&_json_att="+jsonAtt;
+                if (!string.IsNullOrEmpty(token))
+                {
+                    waitTimeUrl += "&REPEAT_SUBMIT_TOKEN=" + token;
+                }
                 string responResult = httpHelper.GetResponseChartByGET(waitTimeUrl);
                 if (responResult != "-1" || !string.IsNullOrEmpty(responResult))
                 {
@@ -993,6 +996,135 @@ namespace JasonLong.Helper
                     queryOrderWaitTime.WaitTime = Convert.ToInt32(jsonData["waitTime"].ToString());
                 }
                 return queryOrderWaitTime;
+            });
+        }
+
+        /// <summary>
+        /// 自动提交订单
+        /// </summary>
+        /// <param name="ticket"></param>
+        /// <param name="passengerTickets"></param>
+        /// <param name="oldPassengers"></param>
+        /// <param name="tourFlag"></param>
+        /// <param name="purposeCode"></param>
+        /// <param name="cancelFlag"></param>
+        /// <param name="bedLevelOrderNum"></param>
+        /// <returns></returns>
+        public Task<Dictionary<bool, string>> AutoSubmitOrderRequest(Tickets ticket, string passengerTickets, string oldPassengers, string tourFlag = "dc", string purposeCode = "ADULT", string cancelFlag = "2", string bedLevelOrderNum = "000000000000000000000000000000")
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(100);
+                Dictionary<string, string> dicAutoSubmitOrderParams = new Dictionary<string, string>()
+                {
+                    {"secretStr",ticket.SecretStr},
+                    {"train_date",ticket.StartTrainDate},
+                    {"tour_flag",tourFlag},
+                    {"purpose_codes",purposeCode},
+                    {"query_from_station_name",ticket.FromStationName},
+                    {"query_to_station_name",ticket.ToStationName},
+                    {"cancel_flag",cancelFlag},
+                    {"bed_level_order_num",bedLevelOrderNum},
+                    {"passengerTicketStr",passengerTickets},
+                    {"oldPassengerStr",oldPassengers}
+                };
+                string strAutoSubmitOrderUrl = ConfigurationManager.AppSettings["AutoSubmitOrderUrl"].ToString();
+                string strAutoSubmitOrderResult = httpHelper.GetResponseByPOST(strAutoSubmitOrderUrl, dicAutoSubmitOrderParams);
+                bool requestState = strAutoSubmitOrderResult.Contains("\"submitStatus\":true");
+                JObject json = JObject.Parse(strAutoSubmitOrderResult);
+                string strMessage = requestState ? json["data"]["result"].ToString() : json["messages"].ToString().Replace("[\"", "").Replace("\"]", "");
+                Dictionary<bool, string> dicResult = new Dictionary<bool, string>()
+                {
+                    {requestState,strMessage}
+                };
+                return dicResult;
+            });
+        }
+
+        /// <summary>
+        /// 自动提交订单-排队
+        /// </summary>
+        /// <param name="ticket"></param>
+        /// <param name="seatType"></param>
+        /// <param name="purposeCodes"></param>
+        /// <param name="jsonAtt"></param>
+        /// <returns></returns>
+        public Task<OrderQueue> GetQueueAsync(Tickets ticket, string seatType, string purposeCodes = "ADULT", string jsonAtt = "")
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                OrderQueue orderQueue = new OrderQueue();
+                string getQueueAsyncUrl = ConfigurationManager.AppSettings["GetQueueCountAsyncUrl"].ToString();
+                string trainDate = Convert.ToDateTime(ticket.StartTrainDate).ToString("ddd MMM dd yyyy HH:mm:ss 'GMT'zzz", System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+                trainDate = HttpUtility.UrlEncode(trainDate.Replace("08:00", "0800"));
+                Dictionary<string, string> dicQueueParams = new Dictionary<string, string>()
+                {
+                    {"train_date",trainDate},
+                    {"train_no",ticket.TrainNo},
+                    {"stationTrainCode",ticket.TrainName},
+                    {"seatType",seatType},
+                    {"fromStationTelecode",ticket.FromStationCode},
+                    {"toStationTelecode",ticket.ToStationCode},
+                    {"leftTicket",ticket.YPInfo},
+                    {"purpose_codes",purposeCodes},
+                    {"_json_att",jsonAtt}
+                };
+                string getQueueAsyncResult = httpHelper.GetResponseByPOST(getQueueAsyncUrl, dicQueueParams);
+                if (!string.IsNullOrEmpty(getQueueAsyncResult))
+                {
+                    JObject json = JObject.Parse(getQueueAsyncResult);
+                    var jsonData = json["data"];
+                    orderQueue.Count = jsonData["count"].ToString();
+                    orderQueue.countT = jsonData["countT"].ToString();
+                    orderQueue.OP_1 = jsonData["op_1"].ToString();
+                    orderQueue.OP_2 = Convert.ToBoolean(jsonData["op_2"].ToString());
+                    orderQueue.Ticket = jsonData["ticket"].ToString();
+                }
+                return orderQueue;
+            });
+        }
+
+        /// <summary>
+        /// 自动提交订单-确认订单
+        /// </summary>
+        /// <param name="passengerStrs"></param>
+        /// <param name="oldPassengers"></param>
+        /// <param name="code"></param>
+        /// <param name="isChange"></param>
+        /// <param name="ticketStr"></param>
+        /// <param name="trainLocation"></param>
+        /// <param name="purposeCode"></param>
+        /// <param name="jsonAtt"></param>
+        /// <returns></returns>
+        public Task<Dictionary<bool, string>> ConfirmOrderForAutoQueue(string passengerStrs, string oldPassengers, string code, string isChange, string ticketStr, string trainLocation, string purposeCode = "ADULT", string jsonAtt = "")
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                string confirmOrderForAutoQueueUrl = ConfigurationManager.AppSettings["ConfirmAutoSubmitOrderUrl"].ToString();
+                Dictionary<string, string> dicParams = new Dictionary<string, string>()
+                {
+                    {"passengerTicketStr",passengerStrs},
+                    {"oldPassengerStr",oldPassengers},
+                    {"randCode",code},
+                    {"purpose_codes",purposeCode},
+                    {"key_check_isChange",isChange},
+                    {"leftTicketStr",ticketStr},
+                    {"train_location",trainLocation},
+                    {"_json_att",jsonAtt}
+                };
+                string confirmOrderForAutoQueueResult = httpHelper.GetResponseByPOST(confirmOrderForAutoQueueUrl, dicParams);
+                bool state = confirmOrderForAutoQueueResult.Contains("\"submitStatus\":true");
+                string errorMsg = "";
+                if (!state)
+                {
+                    JObject json = JObject.Parse(confirmOrderForAutoQueueResult);
+                    errorMsg = json["messages"].ToString();
+                }
+                Dictionary<bool, string> dicResult = new Dictionary<bool, string>()
+                {
+                    {state,errorMsg}
+                };
+                return dicResult;
             });
         }
 
