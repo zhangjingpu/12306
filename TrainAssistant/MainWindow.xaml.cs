@@ -85,6 +85,7 @@ namespace TrainAssistant
                     txtUserName.SelectedValuePath = "Name";
                     txtUserName.SelectedIndex = 0;
                 }
+
             }
             else
             {
@@ -111,7 +112,7 @@ namespace TrainAssistant
         //自动登录选项
         private void chkAutoLogin_Click(object sender, RoutedEventArgs e)
         {
-            if (chkAutoLogin.IsChecked == true)
+            if ((bool)chkAutoLogin.IsChecked)
             {
                 chkRemeberMe.IsChecked = true;
             }
@@ -133,6 +134,7 @@ namespace TrainAssistant
                     if (model.IsAutoLogin)
                     {
                         chkAutoLogin.IsChecked = true;
+                        //btnLogin_Click(sender, e);
                     }
                     else
                     {
@@ -274,7 +276,10 @@ namespace TrainAssistant
                 if (result.Contains("已成功注销"))
                 {
                     progressRingAnima.IsActive = false;
-                    CloseAutoSearch();
+                    if ((bool)chkAutoSearch.IsChecked)
+                    {
+                        CloseAutoSearch();
+                    }
                     lblLoginName.Text = "登录";
                     IsShowLoginPopup(true);
                 }
