@@ -123,7 +123,9 @@
                             <TextBlock Grid.Row="0" Margin="7">
                                 <Hyperlink Name="hyLinkLoadContact" Click="hyLinkLoadContact_Click">重新加载乘客</Hyperlink>
                             </TextBlock>
-                            <Grid Name="gContacts" Margin="7,0,7,7" Grid.Row="1"/>
+                            <ScrollViewer Margin="7,0,7,7" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <Grid Name="gContacts"/>
+                            </ScrollViewer>
                         </Grid>
                     </GroupBox>
                 </Border>
@@ -131,7 +133,7 @@
                     <GroupBox Header="乘车人信息" Margin="0">
                         <DataGrid Name="gridPassenger" AutoGenerateColumns="False" Margin="7" CanUserAddRows="False">
                             <DataGrid.Columns>
-                                <DataGridComboBoxColumn Header="席别">
+                                <DataGridComboBoxColumn Header="席别" Width="70">
                                     <DataGridComboBoxColumn.EditingElementStyle>
                                         <Style TargetType="ComboBox">
                                             <Setter Property="ItemsSource" Value="{Binding Path=SeatType}"/>
@@ -149,9 +151,9 @@
                                         </Style>
                                     </DataGridComboBoxColumn.ElementStyle>
                                 </DataGridComboBoxColumn>
-                                <DataGridTextColumn Header="姓名" Binding="{Binding Path=PassengerName}" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="手机号" Binding="{Binding Path=PassengerMobile}" IsReadOnly="True"/>
-                                <DataGridComboBoxColumn Header="票种">
+                                <DataGridTextColumn Header="姓名" Binding="{Binding Path=PassengerName}" IsReadOnly="True" Width="70"/>
+                                <DataGridTextColumn Header="手机号" Binding="{Binding Path=PassengerMobile}" IsReadOnly="True" Width="90"/>
+                                <DataGridComboBoxColumn Header="票种" Width="70">
                                     <DataGridComboBoxColumn.EditingElementStyle>
                                         <Style TargetType="ComboBox">
                                             <Setter Property="ItemsSource" Value="{Binding Path=TickType}"/>
@@ -169,7 +171,7 @@
                                         </Style>
                                     </DataGridComboBoxColumn.ElementStyle>
                                 </DataGridComboBoxColumn>
-                                <DataGridComboBoxColumn Header="证件类型">
+                                <DataGridComboBoxColumn Header="证件类型" Width="70">
                                     <DataGridComboBoxColumn.EditingElementStyle>
                                         <Style TargetType="ComboBox">
                                             <Setter Property="ItemsSource" Value="{Binding Path=IDType}"/>
@@ -232,14 +234,20 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <GroupBox Grid.Row="1" Header="乘客" Margin="0" Padding="5">
-                    <Grid Name="gridContacts"/>
+                <GroupBox Grid.Row="1" Header="乘客" Margin="0">
+                    <ScrollViewer Margin="5" VerticalScrollBarVisibility="Auto">
+                        <Grid Name="gridContacts"/>
+                    </ScrollViewer>
                 </GroupBox>
-                <GroupBox Grid.Row="3" Header="车次" Margin="0" Padding="5">
-                    <Grid Name="gridTickets"/>
+                <GroupBox Grid.Row="3" Header="车次" Margin="0">
+                    <ScrollViewer Margin="5" VerticalScrollBarVisibility="Auto">
+                        <Grid Name="gridTickets" />
+                    </ScrollViewer>
                 </GroupBox>
-                <GroupBox Grid.Row="5" Header="席别" Margin="0" Padding="5">
-                    <Grid Name="gridSeatTypes"/>
+                <GroupBox Grid.Row="5" Header="席别" Margin="0">
+                    <ScrollViewer Margin="5" VerticalScrollBarVisibility="Auto">
+                        <Grid Name="gridSeatTypes"/>
+                    </ScrollViewer>
                 </GroupBox>
                 <Button Grid.Row="6" Width="100" Content="确定" Name="btnAutoSubmitOrder" Style="{DynamicResource SquareButtonStyle}" Height="27" Click="btnAutoSubmitOrder_Click" />
             </Grid>
@@ -361,7 +369,7 @@
                                 <DataGridTextColumn Header="车次" Width="110" Binding="{Binding Path=TrainName}" />
                                 <DataGridTextColumn Header="出发站" Width="160" Binding="{Binding Path=From}"/>
                                 <DataGridTextColumn Header="到达站" Width="160" Binding="{Binding Path=To}"/>
-                                <DataGridTextColumn Header="历时" Width="90" Binding="{Binding Path=LiShiDay}"/>
+                                <DataGridTextColumn Header="历时" Width="100" Binding="{Binding Path=LiShiDay}"/>
                                 <DataGridTextColumn Header="商务座" Width="90" Binding="{Binding Path=SWZNum}"/>
                                 <DataGridTextColumn Header="特等座" Width="90" Binding="{Binding Path=TZNum}"/>
                                 <DataGridTextColumn Header="一等座" Width="90" Binding="{Binding Path=ZYNum}"/>

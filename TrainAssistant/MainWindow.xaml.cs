@@ -744,6 +744,7 @@ namespace TrainAssistant
         //加载乘客
         private async Task GetContacts()
         {
+            gContacts.Children.Clear();
             lblStatusMsg.Content = "加载乘客中...";
             bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
             if (result)
@@ -766,7 +767,6 @@ namespace TrainAssistant
                 }
                 if (contacts.Count > 0)
                 {
-                    gContacts.Children.Clear();
                     int r = 0, c = 0;
                     for (int i = 0; i < contacts.Count; i++)
                     {
@@ -796,6 +796,7 @@ namespace TrainAssistant
                     }
                 }
             }
+            lblStatusMsg.Content = "加载乘客完成...";
         }
 
         //选择乘客
@@ -1075,13 +1076,16 @@ namespace TrainAssistant
         {
             if ((bool)tsAutoOrder.IsChecked)
             {
+                gridContacts.Children.Clear();
+                gridTickets.Children.Clear();
+                gridSeatTypes.Children.Clear();
                 progressRingAnima.IsActive = true;
                 int tickCount = await SearchTickets();
                 if (tickCount > 0)
                 {
                     borderAutoSubmitOrder.Visibility = Visibility.Visible;
                     gridOpacity.Visibility = Visibility.Visible;
-                    gridSeatTypes.Children.Clear();
+                    
 
                     //乘客
                     lblStatusMsg.Content = "加载乘客中...";
@@ -1106,7 +1110,6 @@ namespace TrainAssistant
                         }
                         if (contacts.Count > 0)
                         {
-                            gridContacts.Children.Clear();
                             int r = 0, c = 0;
                             for (int i = 0; i < contacts.Count; i++)
                             {
@@ -1156,7 +1159,6 @@ namespace TrainAssistant
                             Width = new GridLength()
                         });
                     }
-                    gridTickets.Children.Clear();
                     int tR = 0, tC = 0;
                     for (int t = 0; t < lstTickets.Count(); t++)
                     {
@@ -1345,9 +1347,6 @@ namespace TrainAssistant
         //自动提交订单--确定
         private async void btnAutoSubmitOrder_Click(object sender, RoutedEventArgs e)
         {
-            borderAutoSubmitOrder.Visibility = Visibility.Hidden;
-            gridOpacity.Visibility = Visibility.Hidden;
-            tsAutoOrder.IsChecked = false;
             progressRingAnima.IsActive = true;
             List<string> lstSeatTypes = new List<string>();
             foreach (var chkItem in gridSeatTypes.Children)
@@ -1393,6 +1392,9 @@ namespace TrainAssistant
                 MessageBox.Show("未选择乘客！", "消息");
                 return;
             }
+            borderAutoSubmitOrder.Visibility = Visibility.Hidden;
+            gridOpacity.Visibility = Visibility.Hidden;
+            tsAutoOrder.IsChecked = false;
             passengerTickets = passengerTickets.TrimEnd('_');
             lblPassengers.Tag = passengerTickets;
             lblPassengers.Uid = oldPassengers;
