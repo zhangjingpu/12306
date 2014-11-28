@@ -324,29 +324,6 @@ namespace TrainAssistant
         }
 
         /// <summary>
-        /// 绑定联系人
-        /// </summary>
-        /// <returns></returns>
-        private async Task BindContact(bool isSearch)
-        {
-            progressRingAnima.IsActive = true;
-            if (isSearch)
-            {
-                await ticketHelper.SaveContacts(txtContactName.Text.Trim());
-            }
-            List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
-            if (!isSearch)
-            {
-                contacts = (from c in contacts
-                            where c.PassengerName.Contains(txtContactName.Text.Trim())
-                            select c).ToList<Contacts>();
-            }
-            gridContact.ItemsSource = contacts;
-            lblTicketCount.Content = "共" + contacts.Count() + "个联系人";
-            progressRingAnima.IsActive = false;
-        }
-
-        /// <summary>
         /// 根据车次获取席别
         /// </summary>
         /// <param name="type"></param>
@@ -751,7 +728,7 @@ namespace TrainAssistant
         {
             gContacts.Children.Clear();
             lblStatusMsg.Content = "加载乘客中...";
-            bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
+            bool result = await ticketHelper.SaveContacts();
             if (result)
             {
                 List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
@@ -820,12 +797,10 @@ namespace TrainAssistant
                     }
                 }
             }
-            string train = lblTicket.Content.ToString().Substring(lblTicket.Content.ToString().IndexOf("(") + 1, 1);
-            if (train == "G")
-            {
-                train = "D";
-            }
-            Dictionary<string, string> seatType = await GetTickType(train);//席别
+            string train = lblTicket.Content.ToString().Substring(lblTicket.Content.ToString().IndexOf("(") + 1, 1), trainType = "";
+            trainType = !"DZTK".Contains(train) ? "QT" : train;
+            trainType = "GC".Contains(train) ? "D" : "QT";
+            Dictionary<string, string> seatType = await GetTickType(trainType);//席别
             IDictionary<string, string> seat_Type = new Dictionary<string, string>();
             var type = seatTypes.Split('@');
             for (int i = 0; i < type.Count(); i++)
@@ -895,24 +870,12 @@ namespace TrainAssistant
             gridPassenger.ItemsSource = subOrder;
         }
 
-        //加载常用联系人
-        private async void tabContact_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            await BindContact(true);
-        }
-
         //重新加载乘客
         private async void hyLinkLoadContact_Click(object sender, RoutedEventArgs e)
         {
             progressRingAnima.IsActive = true;
             await GetContacts();
             progressRingAnima.IsActive = false;
-        }
-
-        //查询联系人
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-            await BindContact(false);
         }
 
         //关闭提交订单层
@@ -1090,11 +1053,11 @@ namespace TrainAssistant
                 {
                     borderAutoSubmitOrder.Visibility = Visibility.Visible;
                     gridOpacity.Visibility = Visibility.Visible;
-                    
+
 
                     //乘客
                     lblStatusMsg.Content = "加载乘客中...";
-                    bool result = await ticketHelper.SaveContacts(txtContactName.Text.Trim());
+                    bool result = await ticketHelper.SaveContacts();
                     if (result)
                     {
                         List<Contacts> contacts = ticketHelper.ReadContacts("Contact");
@@ -1420,8 +1383,8 @@ namespace TrainAssistant
                             FromStationCode = txtStartCity.SelectedValue.ToString(),
                             ToStationCode = txtEndCity.SelectedValue.ToString(),
                             YPInfo = strSecre.Substring(strSecre.IndexOf(',') + 1),
-                            TrainNo = chkTicket.Name.Replace("chk",""),
-                            TrainName=chkTicket.Content.ToString()
+                            TrainNo = chkTicket.Name.Replace("chk", ""),
+                            TrainName = chkTicket.Content.ToString()
                         };
                         Dictionary<bool, string> dicAutoSubmitOrder = await ticketHelper.AutoSubmitOrderRequest(ticket, passengerTickets, oldPassengers);
                         if (!dicAutoSubmitOrder.Keys.First())
@@ -1469,7 +1432,7 @@ namespace TrainAssistant
                     {
                         if (!string.IsNullOrEmpty(queryOrderWaitTime.OrderId))
                         {
-                            MessageBox.Show("出票成功！订单号：【" + queryOrderWaitTime.OrderId + "】","消息",MessageBoxButton.OK,MessageBoxImage.Information);
+                            MessageBox.Show("出票成功！订单号：【" + queryOrderWaitTime.OrderId + "】", "消息", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                         break;
                     }

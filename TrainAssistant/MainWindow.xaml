@@ -392,32 +392,6 @@
                         </DataGrid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="常用联系人" Name="tabContact"  PreviewMouseLeftButtonUp="tabContact_PreviewMouseLeftButtonUp">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="30"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="110"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Row="0" Grid.Column="0" Target="{Binding ElementName=txtContactName}" HorizontalContentAlignment="Right" VerticalContentAlignment="Center">联系人名称(_A)：</Label>
-                        <TextBox Grid.Column="1" Grid.Row="0" Height="27" Name="txtContactName" Controls:TextboxHelper.ClearTextButton="True" Controls:TextboxHelper.Watermark="输入联系人名称" VerticalContentAlignment="Center" />
-                        <Button Content="查询" Grid.Row="0" Grid.Column="2" Height="27" Width="100" IsDefault="True" Style="{DynamicResource SquareButtonStyle}" Click="Button_Click" />
-                        <DataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="7" IsReadOnly="True" AutoGenerateColumns="False" Name="gridContact">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="姓名" Binding="{Binding Path=PassengerName}"/>
-                                <DataGridTextColumn Header="性别" Binding="{Binding Path=SexName}"/>
-                                <DataGridTextColumn Header="证件类型" Binding="{Binding Path=PassengerIdTypeName}"/>
-                                <DataGridTextColumn Header="证件号码" Binding="{Binding Path=PassengerIdNo}"/>
-                                <DataGridTextColumn Header="手机/电话" Binding="{Binding Path=Mobile}"/>
-                                <DataGridTextColumn Header="旅客类型" Binding="{Binding Path=PassengerTypeName}"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Grid>
-                </TabItem>
                 <TabItem Header="订单查询">
                     <Grid>
 

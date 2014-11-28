@@ -565,7 +565,7 @@ namespace JasonLong.Helper
         /// </summary>
         /// <param name="passengerName">乘客名</param>
         /// <returns></returns>
-        public Task<bool> SaveContacts(string passengerName)
+        public Task<bool> SaveContacts()
         {
             return Task.Factory.StartNew(() =>
             {
