@@ -37,15 +37,17 @@ namespace TrainAssistant
         }
 
         //窗口加载
-        private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
             if (ticketHelper.CheckInternetConnectedState())
             {
                 txtDate.DisplayDateStart = DateTime.Now;
-                txtDate.DisplayDateEnd = DateTime.Now.AddDays(19);
+                txtDate.DisplayDateEnd = DateTime.Now.AddDays(59);
                 txtDate.Text = txtDate.DisplayDateEnd.Value.ToString("yyyy-MM-dd");
 
                 IsShowLoginPopup(true);
+
+                lblLogin.Tag = await ticketHelper.GetLoginRandomKey();
 
                 byte[] buffter = TrainAssistant.Properties.Resources.data;
                 if (!BasicOCR.LoadLibFromBuffer(buffter, buffter.Length, "123"))
@@ -228,7 +230,7 @@ namespace TrainAssistant
                 //    progressRingAnima.IsActive = false;
                 //    return;
                 //}
-                lblErrorMsg.Content = await ticketHelper.Login(txtUserName.Text.Trim(), txtPassword.Password.Trim(), txtValidateCode.Text.Trim(), (bool)chkRemeberMe.IsChecked, (bool)chkAutoLogin.IsChecked);
+                lblErrorMsg.Content = await ticketHelper.Login(txtUserName.Text.Trim(), txtPassword.Password.Trim(), txtValidateCode.Text.Trim(), (bool)chkRemeberMe.IsChecked, (bool)chkAutoLogin.IsChecked,lblLogin.Tag.ToString());
             }
             catch (Exception)
             {
@@ -1111,7 +1113,9 @@ namespace TrainAssistant
 
                     //车次
                     lblStatusMsg.Content = "乘客加载完成，正在加载车次中...";
+                   
                     List<Tickets> lstTickets = gridTrainList.ItemsSource as List<Tickets>;
+                    //dgTicket.ItemsSource = lstTickets;
                     int tRow = (int)Math.Ceiling((double)lstTickets.Count() / 6), tCell = 6;
                     while (tRow-- > 0)
                     {
