@@ -16,7 +16,7 @@ namespace JasonLong.Helper
         public DataSecurity()
         {
             symmetricAlgorithm = new RijndaelManaged();
-            Key = "$Ja$0^a%son%20L0^ng!*bFROmz%&(X$ia*Volwy)&Puw87%^104lax$tymN%OLH7653";//Guz(%&hj7x89H$yuBI0456FtmaT5&fvHUFCy76*h%(HilJ$lhj!y6&(*jkP87jH7
+            Key = "JjBbSsCcEeGgQqAaZzMmHhLlOoVvXxWwRrDdTtUuIiNnPpFfKkYy1234567890";
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace JasonLong.Helper
         /// <returns>初试向量IV</returns>
         private byte[] GetLegalIV()
         {
-            string sTemp = "fV*da$apjeuw84%fgsRQC*da$%Bcjlpd890(%36^g(*lLKCP%D(Vcsaka%$!ew587dv";//E4ghj*Ghg7!rNIfb&95GUY86GfghUb#er57HBh(u%g6HJ($jhWk7&!hg4ui%$hjk
+            string sTemp = "JjBbSsCcEeGgQqAaZzMmHhLlOoVvXxWwRrDdTtUuIiNnPpFfKkYy1234567890";
             symmetricAlgorithm.GenerateIV();
             byte[] bytTemp = symmetricAlgorithm.IV;
             int IVLength = bytTemp.Length;

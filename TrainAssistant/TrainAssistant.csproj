@@ -89,6 +89,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="HelperClass\JSFunctionHelper.cs" />
+    <Compile Include="HelperClass\ScriptEngine.cs" />
     <Compile Include="HelperClass\TicketHelper.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
